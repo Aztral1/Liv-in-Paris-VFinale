@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace LivinParisVfinale
 {
-    public class Graphe<T>
+    public class Graphe<T> where T : notnull
     {
         /// Représente un graphe composé de nœuds et de liens génériques.
         private Dictionary<T, Noeud<T>> noeuds = new Dictionary<T, Noeud<T>>();
-        private int[,] Matriceadjacence;
+        private int[,] Matriceadjacence = new int[0, 0]; // Initialisation vide
 
         /// Ajoute un nœud au graphe.
         public void AjouteNoeud(T id)
@@ -114,6 +114,10 @@ namespace LivinParisVfinale
                         T noeud1 = (T)Convert.ChangeType(parties[0], typeof(T));
                         T noeud2 = (T)Convert.ChangeType(parties[1], typeof(T));
 
+                        // Vérification explicite des valeurs null
+                        if (noeud1 == null || noeud2 == null)
+                        throw new InvalidOperationException("Les nœuds doivent être valides.");
+
                         AjouteNoeud(noeud1);
                         AjouteNoeud(noeud2);
                         AjouteLien(noeud1, noeud2);
@@ -157,7 +161,7 @@ namespace LivinParisVfinale
 
             foreach (var noeud in noeuds.Keys)
             {
-                if (!parcouru.Contains(noeud) && CycleDFS(noeud, parcouru, null))
+                if (!parcouru.Contains(noeud) && CycleDFS(noeud, parcouru, default(T)))
                 {
                     return true;
                 }
