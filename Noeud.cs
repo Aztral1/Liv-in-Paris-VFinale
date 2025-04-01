@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 
 namespace LivinParisVfinale
 {   /// Représente un nœud dans un graphe.
-    public class Noeud
+    public class Noeud<T>
     {
         /// Identifiant unique du nœud.
-        public int IdNoeud { get; set; }
+        public T IdNoeud { get; set; }
         /// Liste des nœuds adjacents.
-        public List<Noeud> Adjacents { get; set; } = new List<Noeud>();
+        public List<Noeud<T>> Adjacents { get; set; } = new List<Noeud<T>>();
         /// Constructeur pour créer un nœud avec un identifiant donné.
-        public Noeud(int idnoeud)
+        public Noeud(T idnoeud)
         {
             IdNoeud = idnoeud;
         }
