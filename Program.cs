@@ -11,7 +11,7 @@ namespace LivinParisVfinale
     {
         static void Main(string[] args)
         {
-            Graphe graphe = new Graphe(); ///Initialise un nouveau graphe
+            Graphe<int> graphe = new Graphe<int>(); ///Initialise un nouveau graphe
             string cheminfichier = "C:\\Users\\ywmoy\\OneDrive\\Documents\\ESILV\\Année 2\\Pb scien info\\Association-soc-karate\\soc-karate.mtx"; // Remplace par le chemin réel du fichier
 
             graphe.ReadFile(cheminfichier); ///Extrait les informations du fichier mtx
