@@ -13,7 +13,7 @@ using System;
 
 class Program
     {
-        static string connectionString = "server=localhost;database=premierRenduPSI;user=root;password=Xiang92310;";
+        static string connectionString = "server=localhost;database=premierRenduPSI;user=root;password=;";
 
         static void Main(string[] args)
         {
