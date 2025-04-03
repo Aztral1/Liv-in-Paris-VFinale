@@ -1,48 +1,48 @@
 
 
 using System;
-            using System.Collections.Generic;
-            using System.Data.OleDb;
-            using System.IO;
-            using System.Linq;
-            using SkiaSharp;
-            using MySql.Data.MySqlClient;
+using System.Collections.Generic;
+using System.Data.OleDb;
+using System.IO;
+using System.Linq;
+using SkiaSharp;
+using MySql.Data.MySqlClient;
 
 
 
 
 class Program
 {
-        static string connectionString = "server=localhost;database=premierRenduPSI;user=root;password=Xiang92310;";
+    static string connectionString = "server=localhost;database=premierRenduPSI;user=root;password=Xiang92310;";
 
     static void Main(string[] args)
+    {
+        while (true)
         {
-            while (true)
-            {
-                Console.WriteLine("\n--- Bienvenue ---");
-                Console.WriteLine("1. Connexion");
-                Console.WriteLine("2. Créer un compte");
-                Console.WriteLine("3. Quitter");
-                Console.Write("Choisissez une option : ");
-                string choix = Console.ReadLine();
+            Console.WriteLine("\n--- Bienvenue ---");
+            Console.WriteLine("1. Connexion");
+            Console.WriteLine("2. Créer un compte");
+            Console.WriteLine("3. Quitter");
+            Console.Write("Choisissez une option : ");
+            string choix = Console.ReadLine();
 
-                switch (choix)
-                {
-                    case "1":
-                        Connexion();
-                        break;
-                    case "2":
-                        CreerCompte();
-                        break;
-                    case "3":
-                        Console.WriteLine("Au revoir !");
-                        return;
-                    default:
-                        Console.WriteLine("Option invalide, veuillez réessayer.");
-                        break;
-                }
+            switch (choix)
+            {
+                case "1":
+                    Connexion();
+                    break;
+                case "2":
+                    CreerCompte();
+                    break;
+                case "3":
+                    Console.WriteLine("Au revoir !");
+                    return;
+                default:
+                    Console.WriteLine("Option invalide, veuillez réessayer.");
+                    break;
             }
         }
+    }
     static void Connexion()
     {
         while (true)
@@ -82,7 +82,7 @@ class Program
                         if (role == "Client")
                             MenuClient(idUtilisateur);
                         else
-                            MenuCuisinier(idUtilisateur); 
+                            MenuCuisinier(idUtilisateur);
 
                         return;
                     }
@@ -95,73 +95,73 @@ class Program
         }
     }
     static void CreerCompte()
+    {
+        Console.Write("\nVous êtes : 1. Client  2. Cuisinier\nChoix : ");
+        string role = Console.ReadLine();
+
+        Console.Write("Nom : ");
+        string nom = Console.ReadLine();
+        Console.Write("Prénom : ");
+        string prenom = Console.ReadLine();
+        Console.Write("Email : ");
+        string email = Console.ReadLine();
+        Console.Write("Mot de passe : ");
+        string mdp = Console.ReadLine();
+        Console.Write("rue : ");
+        string rue = Console.ReadLine();
+        Console.Write("numMaison : ");
+        string numMaison = Console.ReadLine();
+        Console.Write("code Postal ? : ");
+        string codePostal = Console.ReadLine();
+        Console.Write("numéro de téléphone : ");
+        string numTel = Console.ReadLine();
+        Console.Write("Ville de résidence : ");
+        string ville = Console.ReadLine();
+        Console.Write("Le métro le plus proche de chez vous: ");
+        string metroProche = Console.ReadLine();
+        int totalCommande = 0;
+
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
-            Console.Write("\nVous êtes : 1. Client  2. Cuisinier\nChoix : ");
-            string role = Console.ReadLine();
+            connection.Open();
+            string query = "";
 
-            Console.Write("Nom : ");
-            string nom = Console.ReadLine();
-            Console.Write("Prénom : ");
-            string prenom = Console.ReadLine();
-            Console.Write("Email : ");
-            string email = Console.ReadLine();
-            Console.Write("Mot de passe : ");
-            string mdp = Console.ReadLine();
-            Console.Write("rue : ");
-            string rue = Console.ReadLine();
-            Console.Write("numMaison : ");
-            string numMaison = Console.ReadLine();
-            Console.Write("code Postal ? : ");
-            string codePostal = Console.ReadLine();
-            Console.Write("numéro de téléphone : ");
-            string numTel = Console.ReadLine();
-            Console.Write("Ville de résidence : ");
-            string ville = Console.ReadLine();
-            Console.Write("Le métro le plus proche de chez vous: ");
-            string metroProche = Console.ReadLine();
-            int totalCommande = 0;
-
-            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            if (role == "1")  // Inscription en tant que Client
             {
-                connection.Open();
-                string query = "";
-
-                if (role == "1")  // Inscription en tant que Client
-                {
-                    query = "INSERT INTO Client (nom, prenom, email, motDePasse, rue, numMaison, codePostal, numTel, ville, totalCommande, metroProche) VALUES (@Nom, @Prenom, @Email, @motDePasse, @rue, @numMaison, @codePostal, @numTel, @ville, @totalCommande, @metroProche)";
-                }
-                else if (role == "2")  // Inscription en tant que Cuisinier
-                {
-                    query = "INSERT INTO Cuisinier (nom, prenom, email, motDePasse, rue, numMaison, codePostal, numTel, ville, totalCommande, metroProche) VALUES (@Nom, @Prenom, @Email, @motDePasse, @rue, @numMaison, @codePostal, @numTel, @ville, @totalCommande, @metroProche)";
-                }
-                else
-                {
-                    Console.WriteLine("Choix invalide.");
-                    return;
-                }
-
-                MySqlCommand command = new MySqlCommand(query, connection);
-                command.Parameters.AddWithValue("@Nom", nom);
-                command.Parameters.AddWithValue("@Prenom", prenom);
-                command.Parameters.AddWithValue("@Email", email);
-                command.Parameters.AddWithValue("@motDePasse", mdp);
-                command.Parameters.AddWithValue("@rue", rue);
-                command.Parameters.AddWithValue("@numMaison", numMaison);
-                command.Parameters.AddWithValue("@codePostal", codePostal);
-                command.Parameters.AddWithValue("@numTel", numTel);
-                command.Parameters.AddWithValue("@ville", ville);
-                command.Parameters.AddWithValue("@totalCommande", totalCommande);
-                command.Parameters.AddWithValue("@metroProche", metroProche);
-
-
-
-
-
-
-                int rowsAffected = command.ExecuteNonQuery();
-                Console.WriteLine(rowsAffected > 0 ? "Compte créé avec succès !" : "Erreur lors de la création du compte.");
+                query = "INSERT INTO Client (nom, prenom, email, motDePasse, rue, numMaison, codePostal, numTel, ville, totalCommande, metroProche) VALUES (@Nom, @Prenom, @Email, @motDePasse, @rue, @numMaison, @codePostal, @numTel, @ville, @totalCommande, @metroProche)";
             }
+            else if (role == "2")  // Inscription en tant que Cuisinier
+            {
+                query = "INSERT INTO Cuisinier (nom, prenom, email, motDePasse, rue, numMaison, codePostal, numTel, ville, totalCommande, metroProche) VALUES (@Nom, @Prenom, @Email, @motDePasse, @rue, @numMaison, @codePostal, @numTel, @ville, @totalCommande, @metroProche)";
+            }
+            else
+            {
+                Console.WriteLine("Choix invalide.");
+                return;
+            }
+
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@Nom", nom);
+            command.Parameters.AddWithValue("@Prenom", prenom);
+            command.Parameters.AddWithValue("@Email", email);
+            command.Parameters.AddWithValue("@motDePasse", mdp);
+            command.Parameters.AddWithValue("@rue", rue);
+            command.Parameters.AddWithValue("@numMaison", numMaison);
+            command.Parameters.AddWithValue("@codePostal", codePostal);
+            command.Parameters.AddWithValue("@numTel", numTel);
+            command.Parameters.AddWithValue("@ville", ville);
+            command.Parameters.AddWithValue("@totalCommande", totalCommande);
+            command.Parameters.AddWithValue("@metroProche", metroProche);
+
+
+
+
+
+
+            int rowsAffected = command.ExecuteNonQuery();
+            Console.WriteLine(rowsAffected > 0 ? "Compte créé avec succès !" : "Erreur lors de la création du compte.");
         }
+    }
     static void MenuClient(int idClient)
     {
         List<string> platsCommandes = new List<string>(); // Stocker les noms des plats commandés
@@ -206,22 +206,30 @@ class Program
             Console.WriteLine("1. Modifier mon menu");
             Console.WriteLine("2. Voir mes plats");
             Console.WriteLine("3. Voir mes clients");
-            Console.WriteLine("4. Se déconnecter");
+            Console.WriteLine("4. Voir les commandes à préparer");
+            Console.WriteLine("5. Mettre à jour le statut d'une commande");
+            Console.WriteLine("6. Se déconnecter");
             Console.Write("Choisissez une option : ");
             string choix = Console.ReadLine();
 
             switch (choix)
             {
                 case "1":
-                    ModifierMenu(idCuisinier);  // ✅ Passe l'ID
+                    ModifierMenu(idCuisinier);  
                     break;
                 case "2":
-                    VoirPlats(idCuisinier);  // ✅ Passe l'ID
+                    VoirPlats(idCuisinier);  
                     break;
                 case "3":
-                    VoirClients(idCuisinier);  
+                    VoirClients(idCuisinier);
                     break;
                 case "4":
+                    VoirCommandesAPreparer(idCuisinier);
+                    break;
+                case "5":
+                    Mettreàjourcommande();
+                    break;
+                case "6":
                     return;
                 default:
                     Console.WriteLine("Option invalide, veuillez réessayer.");
@@ -248,36 +256,27 @@ class Program
         {
             connection.Open();
 
-            // Vérifier si un plat existe déjà pour ce cuisinier
-            string checkQuery = "SELECT idPlat FROM Plat WHERE idPlat = @idCuisinier";  // ✅ Vérifie sur idPlat
-            MySqlCommand checkCmd = new MySqlCommand(checkQuery, connection);
-            checkCmd.Parameters.AddWithValue("@idCuisinier", idCuisinier);
-            object result = checkCmd.ExecuteScalar();
-
-            string query;
-            if (result != null)
-            {
-                query = "UPDATE Plat SET nomPlat = @nomPlat, regime = @regime, prix = @prix, " +
-                        "nationalite = @nationalite, dateFabrication = @dateFabrication, datePeremption = @datePeremption " +
-                        "WHERE idPlat = @idCuisinier";  // ✅ Mise à jour
-            }
-            else
-            {
-                query = "INSERT INTO Plat (idPlat, nomPlat, regime, prix, nationalite, dateFabrication, datePeremption) " +
-                        "VALUES (@idCuisinier, @nomPlat, @regime, @prix, @nationalite, @dateFabrication, @datePeremption)";  // ✅ Insertion
-            }
+            // Insertion du plat avec idCuisinier
+            string query = "INSERT INTO Plat (nomPlat, regime, prix, nationalite, dateFabrication, datePeremption, idCuisinier) " +
+                           "VALUES (@nomPlat, @regime, @prix, @nationalite, @dateFabrication, @datePeremption, @idCuisinier)";
 
             MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@idCuisinier", idCuisinier);
             command.Parameters.AddWithValue("@nomPlat", nomPlat);
             command.Parameters.AddWithValue("@regime", regime);
             command.Parameters.AddWithValue("@prix", prix);
             command.Parameters.AddWithValue("@nationalite", nationalite);
             command.Parameters.AddWithValue("@dateFabrication", dateFabrication);
             command.Parameters.AddWithValue("@datePeremption", datePeremption);
+            command.Parameters.AddWithValue("@idCuisinier", idCuisinier);
 
             int rowsAffected = command.ExecuteNonQuery();
-            Console.WriteLine(rowsAffected > 0 ? "Plat ajouté/mis à jour avec succès !" : "Erreur lors de l'ajout/mise à jour du plat.");
+            Console.WriteLine(rowsAffected > 0 ? "Plat ajouté avec succès !" : "Erreur lors de l'ajout du plat.");
+
+            // Récupérer l'ID du plat inséré
+            long idPlat = command.LastInsertedId;
+
+            // Ajout des ingrédients
+            AjouterIngredients(idPlat, connection);
 
             connection.Close();
         }
@@ -289,7 +288,7 @@ class Program
             connection.Open();
 
             // Correction de la requête pour bien récupérer les plats du cuisinier
-            string query = "SELECT nomPlat, regime, nationalite, prix FROM Plat WHERE idPlat = @idCuisinier;";
+            string query = "SELECT nomPlat, regime, nationalite, prix FROM Plat where Plat.idCuisinier = @idCuisinier;";
             MySqlCommand command = new MySqlCommand(query, connection);
             command.Parameters.AddWithValue("@idCuisinier", idCuisinier);
 
@@ -318,7 +317,7 @@ class Program
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             connection.Open();
-            string query = "SELECT * FROM Cuisinier JOIN Plat ON idPlat = idCuisinier";
+            string query = "SELECT * FROM Cuisinier JOIN Plat ON Plat.idCuisinier = Cuisinier.idCuisinier";
             MySqlCommand command = new MySqlCommand(query, connection);
             MySqlDataReader reader = command.ExecuteReader();
 
@@ -338,10 +337,10 @@ class Program
             connection.Open();
 
             string query = @"
-            SELECT DISTINCT client.nom, client.prenom, client.email, client.numTel 
-            FROM Client 
-            JOIN Commande ON client.idClient = commande.idClient
-            WHERE commande.idCommande = @idCuisinier;";
+        SELECT DISTINCT client.nom, client.prenom, client.email, client.numTel 
+        FROM Client 
+        JOIN Commande ON Client.idClient = Commande.idClient
+        WHERE Commande.idCuisinier = @idCuisinier;";
 
             MySqlCommand command = new MySqlCommand(query, connection);
             command.Parameters.AddWithValue("@idCuisinier", idCuisinier);
@@ -363,6 +362,7 @@ class Program
             }
         }
     }
+
     static double AjouterPlatCommande(List<string> platsCommandes)
     {
         Console.Write("\nEntrez le nom du plat que vous souhaitez commander : ");
@@ -415,7 +415,7 @@ class Program
             commentaire = Console.ReadLine();
             if (commentaire.Length > 250)
             {
-                commentaire = commentaire.Substring(0, 250); 
+                commentaire = commentaire.Substring(0, 250);
                 Console.WriteLine("Commentaire trop long, il a été tronqué.");
             }
         }
@@ -434,13 +434,14 @@ class Program
             connection.Open();
 
             // Insérer la commande dans la base de données
-            string insertQuery = @"INSERT INTO Commande (nom, prix, tempsPreparation, statut, date, idClient, commentaire)
-                               VALUES (@nom, @prix, @tempsPreparation, @statut, @date, @idClient, @commentaire)";
+            string insertQuery = @"INSERT INTO Commande (nom, prix, tempsPreparation, statut, date, idClient, commentaire,idCuisinier)
+                               VALUES (@nom, @prix, @tempsPreparation, @statut, @date, @idClient, @commentaire,)";///////////////////////////////:modifier
 
             MySqlCommand insertCmd = new MySqlCommand(insertQuery, connection);
+
             insertCmd.Parameters.AddWithValue("@nom", string.Join(", ", platsCommandes)); // Concatène les plats
             insertCmd.Parameters.AddWithValue("@prix", totalPrix);
-            insertCmd.Parameters.AddWithValue("@tempsPreparation", 30); // Temps de préparation par défaut à modifier avec le temps du graphe
+            insertCmd.Parameters.AddWithValue("@tempsPreparation", 30); // mettre le temps avec le graphe
             insertCmd.Parameters.AddWithValue("@statut", "en attente");
             insertCmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd")); // Date actuelle
             insertCmd.Parameters.AddWithValue("@idClient", idClient);
@@ -448,180 +449,278 @@ class Program
 
             insertCmd.ExecuteNonQuery();
 
-            Console.WriteLine("Paiement effectué avec succès ! Commande enregistrée.\nTemps d'attente estimée à : "+30+" minutes\nMerci et à bientôt !");
-        }
-    }
-        static void AfficherChemin(List<Noeud<string>> chemin)
-{
-    if (chemin == null || chemin.Count == 0)
-    {
-        Console.WriteLine("⚠️ Aucun chemin trouvé");
-        return;
-    }
-
-    Console.WriteLine($"\n🗺 Chemin de {chemin.First().Libelle} à {chemin.Last().Libelle} :");
-    double total = 0;
-
-    for (int i = 0; i < chemin.Count - 1; i++)
-    {
-        var lien = chemin[i].Liens.FirstOrDefault(l => l.Destination == chemin[i + 1])
-                 ?? chemin[i + 1].Liens.First(l => l.Destination == chemin[i]);
-
-        if (lien == null)
-        {
-            Console.WriteLine($"Erreur: Lien manquant entre {chemin[i].Libelle} et {chemin[i + 1].Libelle}");
-            return;
-        }
-
-        total += lien.Poids;
-        Console.WriteLine($"  {(i + 1).ToString().PadLeft(2)}. {chemin[i].Libelle} \u279C {chemin[i + 1].Libelle} ({lien.Poids} min)");
-    }
-
-    Console.WriteLine($"\n⏱ Total: {total} minutes | 🚉 {chemin.Count} stations");
-    Console.WriteLine("------------------------------------------------");
-}
-
-static Dictionary<int, Noeud<string>> ChargerNoeuds(string fichierExcel)
-{
-    var noeuds = new Dictionary<int, Noeud<string>>();
-    string connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={fichierExcel};Extended Properties='Excel 12.0;HDR=YES;IMEX=1'";
-
-    // D'abord charger tous les noeuds de base
-    using (OleDbConnection connection = new OleDbConnection(connectionString))
-    {
-        connection.Open();
-        OleDbCommand command = new OleDbCommand("SELECT * FROM [Noeuds$]", connection);
-        OleDbDataReader reader = command.ExecuteReader();
-
-        while (reader.Read())
-        {
-            try
-            {
-                int id = int.Parse(reader[0].ToString());
-                string libelleLigne = reader[1].ToString();
-                string libelleStation = reader[2].ToString();
-                double longitude = double.Parse(reader[3].ToString(), System.Globalization.CultureInfo.InvariantCulture);
-                double latitude = double.Parse(reader[4].ToString(), System.Globalization.CultureInfo.InvariantCulture);
-                string commune = reader[5].ToString();
-                string codeInsee = reader[6].ToString();
-
-                // Initialisation avec temps de changement à 0 par défaut
-                noeuds.Add(id, new Noeud<string>(id, libelleStation, libelleLigne, longitude, latitude, commune, codeInsee, 0));
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur ligne noeud {noeuds.Count + 2}: {ex.Message}");
-            }
+            Console.WriteLine("Paiement effectué avec succès ! Commande enregistrée.\nTemps d'attente estimée à : " + 30 + " minutes\nDistance : 30 \nMerci et à bientôt !");// remplacer les 30 par le temps et la distance 
         }
     }
 
-    // Ensuite charger les temps de changement depuis l'onglet Arcs
-    using (OleDbConnection connection = new OleDbConnection(connectionString))
+    static void AjouterIngredients(long idPlat, MySqlConnection connection)
     {
-        connection.Open();
-        OleDbCommand command = new OleDbCommand("SELECT * FROM [Arcs$] WHERE [Temps de Changement] IS NOT NULL", connection);
-        OleDbDataReader reader = command.ExecuteReader();
-
-        while (reader.Read())
+        while (true)
         {
-            try
+            Console.Write("\nNom de l'ingrédient (ou taper 'fin' pour arrêter) : ");
+            string nomIngredient = Console.ReadLine();
+            if (nomIngredient.ToLower() == "fin") break;
+
+           
+            Console.Write("Origine : ");
+            string origine = Console.ReadLine();
+          
+
+            string query = "INSERT INTO ingredient (nom,  origine, idPlat) " +
+                           "VALUES (@nom, @origine, @idPlat)";
+
+            MySqlCommand cmd = new MySqlCommand(query, connection);
+            cmd.Parameters.AddWithValue("@nom", nomIngredient);
+            cmd.Parameters.AddWithValue("@origine", origine);
+            cmd.Parameters.AddWithValue("@idPlat", idPlat);
+
+            cmd.ExecuteNonQuery();
+            Console.WriteLine("Ingrédient ajouté !");
+        }
+    }
+
+    static void VoirCommandesAPreparer(int idCuisinier)
+    {
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            connection.Open();
+
+            string query = "SELECT idCommande, nom, prix, statut, date, idClient, commentaire " +
+                           "FROM commande WHERE idCuisinier = @idCuisinier";
+
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@idCuisinier", idCuisinier);
+
+            using (MySqlDataReader reader = command.ExecuteReader())
             {
-                int idStation = Convert.ToInt32(reader[0]);
-                if (noeuds.ContainsKey(idStation))
+                if (!reader.HasRows)
                 {
-                    double tempsChangement = Convert.ToDouble(reader["Temps de Changement"].ToString());
-                    noeuds[idStation].TempsChangement = tempsChangement;
+                    Console.WriteLine("Aucune commande à préparer.");
+                    return;
+                }
+
+                Console.WriteLine("\nCommandes à préparer :");
+                while (reader.Read())
+                {
+                    Console.WriteLine($"Commande #{reader["idCommande"]} - {reader["nom"]} - {reader["prix"]}€");
+                    Console.WriteLine($"Client: {reader["idClient"]} | Statut: {reader["statut"]} | Date: {reader["date"]}"); // mettre le temps estimée et la distance
+                    Console.WriteLine($"Commentaire: {reader["commentaire"]}\n");
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur chargement temps changement: {ex.Message}");
-            }
+            connection.Close();
         }
     }
 
-    return noeuds;
-}
-
-static List<Tuple<Noeud<string>, Noeud<string>, double>> ChargerArcs(string fichierExcel, Dictionary<int, Noeud<string>> noeuds)
-{
-    var arcs = new HashSet<Tuple<Noeud<string>, Noeud<string>, double>>(new ArcEqualityComparer());
-    string connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={fichierExcel};Extended Properties='Excel 12.0;HDR=YES;IMEX=1'";
-
-    using (OleDbConnection connection = new OleDbConnection(connectionString))
+    static void Mettreàjourcommande()
     {
-        connection.Open();
-        OleDbCommand command = new OleDbCommand("SELECT * FROM [Arcs$]", connection);
-        OleDbDataReader reader = command.ExecuteReader();
-
-        while (reader.Read())
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
-            try
+            Console.WriteLine("Quelle est la commande à mettre à jour ?");
+            int idCommande = Convert.ToInt32(Console.ReadLine());
+            Console.WriteLine("Quel est le nouveau statut de la commande ?");
+            string nouveauStatut = Console.ReadLine();
+            connection.Open();
+            string query = "UPDATE Commande SET statut = @statut WHERE idCommande =@idCommande ";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@idCommande", idCommande);
+            command.Parameters.AddWithValue("@statut", nouveauStatut);
+            int rowsAffected = command.ExecuteNonQuery();
+            Console.WriteLine(rowsAffected > 0 ? "Commande mise à jour avec succès !" : "Erreur lors de la mise à jour de la commande.");
+        }
+    }
+
+
+    static void résultatGraphe()
+    {
+        // Charger les données depuis Excel
+        var noeuds = ChargerNoeuds("MetroParis(1).xlsx");
+        var graphe = new Graphe<string>();
+
+        // Ajouter les noeuds au graphe
+        foreach (var noeud in noeuds.Values)
+        {
+            graphe.AjouterNoeud(noeud);
+        }
+
+        // Charger et créer les liens
+        var arcs = ChargerArcs("MetroParis(1).xlsx", noeuds);
+        foreach (var arc in arcs)
+        {
+            graphe.AjouterLien(arc.Item1, arc.Item2, arc.Item3);
+        }
+
+        // Afficher le graphe avec SkiaSharp
+        AfficherGraphe(graphe, "metro_paris.png");
+
+    }
+
+    static Dictionary<int, Noeud<string>> ChargerNoeuds(string fichierExcel)
+    {
+        var noeuds = new Dictionary<int, Noeud<string>>();
+        string connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={fichierExcel};Extended Properties='Excel 12.0;HDR=YES;IMEX=1'";
+
+        using (OleDbConnection connection = new OleDbConnection(connectionString))
+        {
+            connection.Open();
+            OleDbCommand command = new OleDbCommand("SELECT * FROM [Noeuds$]", connection);
+            OleDbDataReader reader = command.ExecuteReader();
+
+            while (reader.Read())
+            {
+                try
+                {
+                    int id = int.Parse(reader[0].ToString());
+                    string libelleLigne = reader[1].ToString();
+                    string libelleStation = reader[2].ToString();
+
+                    // Conversion directe avec culture invariante
+                    double longitude = double.Parse(reader[3].ToString(), System.Globalization.CultureInfo.InvariantCulture);
+                    double latitude = double.Parse(reader[4].ToString(), System.Globalization.CultureInfo.InvariantCulture);
+
+                    string commune = reader[5].ToString();
+                    string codeInsee = reader[6].ToString();
+
+                    noeuds.Add(id, new Noeud<string>(id, libelleStation, libelleLigne, longitude, latitude, commune, codeInsee));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Erreur ligne {noeuds.Count + 2}: {ex.Message}");
+                }
+            }
+        }
+        return noeuds;
+    }
+
+    static List<Tuple<Noeud<string>, Noeud<string>, double>> ChargerArcs(string fichierExcel, Dictionary<int, Noeud<string>> noeuds)
+    {
+        var arcs = new List<Tuple<Noeud<string>, Noeud<string>, double>>();
+        string connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={fichierExcel};Extended Properties='Excel 12.0;HDR=YES;IMEX=1'";
+
+        using (OleDbConnection connection = new OleDbConnection(connectionString))
+        {
+            connection.Open();
+            OleDbCommand command = new OleDbCommand("SELECT * FROM [Arcs$]", connection);
+            OleDbDataReader reader = command.ExecuteReader();
+
+            while (reader.Read())
             {
                 int idStation = Convert.ToInt32(reader[0]);
-                if (!noeuds.ContainsKey(idStation)) continue;
-
+                string station = reader[1].ToString();
+                string precedentText = reader[2].ToString();
+                string suivantText = reader[3].ToString();
                 string tempsText = reader[4].ToString();
+
                 if (string.IsNullOrEmpty(tempsText)) continue;
+
                 double temps = Convert.ToDouble(tempsText);
 
-                
-                // Gestion des liens précédents
-                if (!string.IsNullOrEmpty(reader[2].ToString()))
+                // Gérer les liens précédents
+                if (!string.IsNullOrEmpty(precedentText))
                 {
-                    int idPrecedent = ParseId(reader[2].ToString());
-                    if (noeuds.ContainsKey(idPrecedent))
+                    int idPrecedent;
+                    if (int.TryParse(precedentText.Replace("=A", "").Replace("+1", ""), out idPrecedent))
                     {
-                        var precedent = noeuds[idPrecedent];
-                        var current = noeuds[idStation];
-                        arcs.Add(Tuple.Create(precedent, current, temps));
-                        arcs.Add(Tuple.Create(current, precedent, temps));
+                        if (noeuds.ContainsKey(idPrecedent))
+                        {
+                            arcs.Add(Tuple.Create(noeuds[idPrecedent], noeuds[idStation], temps));
+                        }
                     }
                 }
 
-                // Gestion des liens suivants
-                if (!string.IsNullOrEmpty(reader[3].ToString()))
+                // Gérer les liens suivants
+                if (!string.IsNullOrEmpty(suivantText))
                 {
-                    int idSuivant = ParseId(reader[3].ToString());
-                    if (noeuds.ContainsKey(idSuivant))
+                    int idSuivant;
+                    if (int.TryParse(suivantText.Replace("=A", "").Replace("+1", ""), out idSuivant))
                     {
-                        var current = noeuds[idStation];
-                        var suivant = noeuds[idSuivant];
-                        arcs.Add(Tuple.Create(current, suivant, temps));
-                        arcs.Add(Tuple.Create(suivant, current, temps));
+                        if (noeuds.ContainsKey(idSuivant))
+                        {
+                            arcs.Add(Tuple.Create(noeuds[idStation], noeuds[idSuivant], temps));
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Erreur lors du chargement d'un arc: {ex.Message}");
             }
         }
-    }
-    return arcs.ToList();
-}
 
-// Nouveau: Ajoutez cette classe interne à Program.cs
-class ArcEqualityComparer : IEqualityComparer<Tuple<Noeud<string>, Noeud<string>, double>>
-{
-    public bool Equals(Tuple<Noeud<string>, Noeud<string>, double> x, Tuple<Noeud<string>, Noeud<string>, double> y)
+        return arcs;
+    }
+
+    // La méthode AfficherGraphe reste identique à votre version originale
+    static void AfficherGraphe(Graphe<string> graphe, string nomFichier)
     {
-        return x.Item1.Id == y.Item1.Id && x.Item2.Id == y.Item2.Id;
-    }
+        const int width = 2000;
+        const int height = 2000;
+        const int marge = 50;
 
-    public int GetHashCode(Tuple<Noeud<string>, Noeud<string>, double> obj)
-    {
-        return obj.Item1.Id.GetHashCode() ^ obj.Item2.Id.GetHashCode();
+        // 1. Calcul des bornes du graphe
+        double minLon = graphe.Noeuds.Min(n => n.Longitude);
+        double maxLon = graphe.Noeuds.Max(n => n.Longitude);
+        double minLat = graphe.Noeuds.Min(n => n.Latitude);
+        double maxLat = graphe.Noeuds.Max(n => n.Latitude);
+
+        // 2. Création de la surface de dessin
+        using (var surface = SKSurface.Create(new SKImageInfo(width, height)))
+        {
+            var canvas = surface.Canvas;
+            canvas.Clear(SKColors.White);
+
+            // 3. Configuration des styles
+            var paintLien = new SKPaint
+            {
+                Color = SKColors.Gray.WithAlpha(128),
+                StrokeWidth = 3,
+                IsAntialias = true,
+                Style = SKPaintStyle.Stroke
+            };
+
+            var paintNoeud = new SKPaint
+            {
+                Color = SKColors.Red,
+                IsAntialias = true,
+                Style = SKPaintStyle.Fill
+            };
+
+            var paintTexte = new SKPaint
+            {
+                Color = SKColors.Black,
+                IsAntialias = true,
+                TextSize = 24,
+                TextAlign = SKTextAlign.Center
+            };
+
+            // 4. Dessin des liens
+            foreach (var lien in graphe.Liens)
+            {
+                float x1 = marge + (float)((lien.Source.Longitude - minLon) / (maxLon - minLon) * (width - 2 * marge));
+                float y1 = marge + (float)((maxLat - lien.Source.Latitude) / (maxLat - minLat) * (height - 2 * marge));
+                float x2 = marge + (float)((lien.Destination.Longitude - minLon) / (maxLon - minLon) * (width - 2 * marge));
+                float y2 = marge + (float)((maxLat - lien.Destination.Latitude) / (maxLat - minLat) * (height - 2 * marge));
+
+                canvas.DrawLine(x1, y1, x2, y2, paintLien);
+            }
+
+            // 5. Dessin des noeuds
+            foreach (var noeud in graphe.Noeuds)
+            {
+                float x = marge + (float)((noeud.Longitude - minLon) / (maxLon - minLon) * (width - 2 * marge));
+                float y = marge + (float)((maxLat - noeud.Latitude) / (maxLat - minLat) * (height - 2 * marge));
+
+                // Dessin du cercle
+                canvas.DrawCircle(x, y, 8, paintNoeud);
+
+                // Dessin du texte (libellé)
+                canvas.DrawText(noeud.Libelle, x, y - 15, paintTexte);
+            }
+
+            // 6. Sauvegarde de l'image
+            using (var image = surface.Snapshot())
+            using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
+            using (var stream = File.OpenWrite(nomFichier))
+            {
+                data.SaveTo(stream);
+            }
+        }
+
+        Console.WriteLine($"Carte du métro sauvegardée dans {nomFichier}");
     }
 }
-
-// Nouvelle classe pour éviter les doublons
-   
-static int ParseId(string text)
-{
-    if (text.StartsWith("=A") || text.StartsWith("=D") || text.StartsWith("=C"))
-        return int.Parse(text.Substring(3).Replace("+1", ""));
-    return int.Parse(text);
-}
-}
-   
