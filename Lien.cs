@@ -7,12 +7,12 @@
         /// <summary>
         /// identifiant du premier nœud    
         /// </summary>
-        public T Noeud1 { get; set; }
+        public Noeud<T> Source { get; }
 
         /// <summary>
         /// identifiant du deuxième nœud.
         /// </summary>
-        public T Noeud2 { get; set; }
+        public Noeud<T> Destination { get; }
 
         /// <summary>
         /// poids du lien entre les deux nœuds
@@ -25,7 +25,7 @@
         /// <param name="noeud1"></param>
         /// <param name="noeud2"></param>
         /// <param name="poids"></param>
-        public Lien(T noeud1, T noeud2, double poids)
+        public Lien(Noeud<T> source, Noeud<T> destination, double poids)
         {
             Noeud1 = noeud1;
             Noeud2 = noeud2;
