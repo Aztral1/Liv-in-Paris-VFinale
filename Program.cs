@@ -29,9 +29,10 @@ class Program
             Console.WriteLine("1) Connexion");
             Console.WriteLine("2) Création compte");
             Console.WriteLine("3) Quitter");
+             Console.WriteLine("4) Test chemin, affichage chemin, Distance haversine et temps");
             Console.Write("Choisissez une option : ");
             string choix = Console.ReadLine();
-
+            
             // gère le choix de l'utilisateur
             switch (choix)
             {
@@ -47,7 +48,100 @@ class Program
                 default:
                     Console.WriteLine("Option invalide, veuillez réessayer :(");
                     break;
-                    //case "4":
+                    case "4":
+                    // Initialisation et chargement des données
+var graphe = new Graphe<string>();
+var noeuds = ChargerNoeuds("MetroParis(1).xlsx");
+var arcs = ChargerArcs("MetroParis(1).xlsx", noeuds);
+
+foreach (var noeud in noeuds.Values) graphe.AjouterNoeud(noeud);
+foreach (var arc in arcs) graphe.AjouterLien(arc.Item1, arc.Item2, arc.Item3);
+
+// Menu interactif
+while (true)
+{
+    Console.Clear();
+    Console.WriteLine("=== PLANIFICATEUR DE TRAJET MÉTRO PARISIEN ===");
+    Console.WriteLine("\n1. Rechercher un trajet");
+    Console.WriteLine("2. Quitter");
+    Console.Write("\nVotre choix : ");
+
+    string choix = Console.ReadLine();
+
+    if (choix == "2") break;
+
+    if (choix == "1")
+    {
+        Console.WriteLine("\nAlgorithmes disponibles :");
+        Console.WriteLine("1. Dijkstra (recommandé)");
+        Console.WriteLine("2. Bellman-Ford");
+        Console.WriteLine("3. Floyd-Marshall");
+        Console.Write("\nChoisissez un algorithme (1-3) : ");
+        string choixAlgo = Console.ReadLine();
+
+        List<Noeud<string>> chemin = null;
+        string algoUtilisé = "";
+        Console.WriteLine("De quelle station partez-vous ?");
+        var nomdépart = Console.ReadLine()?.Trim().ToUpper();
+        var départ = noeuds.Values.FirstOrDefault(n => n.Libelle.ToUpper().Contains(nomdépart));
+
+        if (départ == null)
+        {
+            Console.WriteLine($"Aucune station contenant '{nomdépart}' n'a été trouvée.");
+            continue; // ou return selon votre flux
+        }
+
+        Console.WriteLine("Vers quelle station allez-vous ?");
+        var nomarrivée = Console.ReadLine()?.Trim().ToUpper();
+        var arrivée = noeuds.Values.FirstOrDefault(n => n.Libelle.ToUpper().Contains(nomarrivée));
+
+        if (arrivée == null)
+        {
+            Console.WriteLine($"Aucune station contenant '{nomarrivée}' n'a été trouvée.");
+            continue; // ou return selon votre flux
+        }
+        switch (choixAlgo)
+        {
+            case "1":
+                chemin = Chemin<string>.Dijsktra(graphe, départ, arrivée);
+                algoUtilisé = "Dijkstra";
+                break;
+            case "2":
+                var distancesBF = Chemin<string>.BellmanFord(graphe, départ);
+                chemin = Chemin<string>.ReconstruireCheminBellmanFord(distancesBF, graphe, départ, arrivée);
+                algoUtilisé = "Bellman-Ford";
+                break;
+            case "3":
+            
+                var (distancesFW, predecesseursFW) = Chemin<string>.FloydWarshall(graphe);
+                chemin = Chemin<string>.ReconstruireCheminFloydWarshall(predecesseursFW, départ, arrivée);
+                algoUtilisé = "Floyd-Warshall";
+                break;
+            default:
+                Console.WriteLine("Choix invalide, utilisation de Dijkstra par défaut.");
+                chemin = Chemin<string>.Dijsktra(graphe, départ, arrivée);
+                algoUtilisé = "Dijkstra";
+                break;
+        }
+
+        // Affichage des résultats
+        if (chemin.Count > 0)
+        {
+            Console.WriteLine($"\n CHEMIN TROUVÉ ({chemin.Count} stations) - Algorithme: {algoUtilisé}");
+            AfficherChemin(chemin);
+            graphe.AfficherGraphe("metro_paris_chemin.png", chemin);
+            Process.Start(new ProcessStartInfo { FileName = "metro_paris_chemin.png", UseShellExecute = true });
+        }
+        else
+        {
+            Console.WriteLine("\nAUCUN CHEMIN TROUVÉ");
+            Console.WriteLine($"Entre {départ.Libelle} et {arrivée.Libelle}");
+            Process.Start(new ProcessStartInfo { FileName = "metro_paris.png", UseShellExecute = true });
+        }
+
+        Console.WriteLine("\nAppuyez sur une touche pour continuer...");
+        Console.ReadKey();
+    }
 
             }
         }
@@ -746,34 +840,78 @@ class Program
             }
         }
     }
+    /// conversion degrés -> radians
+static double DegresToRadians(double deg) => deg * (Math.PI / 180);
+static double CalculerDistanceHaversine(double lat1, double lon1, double lat2, double lon2)
+{
+    const double R = 6371; // Rayon terrestre en km
+    var dLat = DegresToRadians(lat2 - lat1);
+    var dLon = DegresToRadians(lon2 - lon1);
 
+    var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+            Math.Cos(DegresToRadians(lat1)) * Math.Cos(DegresToRadians(lat2)) *
+            Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
 
-    /// <summary>
-    /// génère et affiche le graphe du métro parisien à partir du fichier Excel
-    /// </summary>
-    static void résultatGraphe()
+    var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+    return R * c;
+}
+static void AfficherChemin(List<Noeud<string>> chemin)
+{
+    Console.WriteLine($"\n Chemin de {chemin.First().Libelle} à {chemin.Last().Libelle} :");
+    double tempsTotal = 0;
+    double tempsTrajet = 0;
+    double distanceTotale = 0;
+    int nbChangements = 0;
+    string ligneActuelle = chemin[0].Lignes.First();  // Prend la première ligne disponible
+
+    for (int i = 0; i < chemin.Count - 1; i++)
     {
-        // Charger les données depuis Excel
-        var noeuds = ChargerNoeuds("MetroParis(1).xlsx");
-        var graphe = new Graphe<string>();
+        var current = chemin[i];
+        var next = chemin[i + 1];
 
-        // Ajouter les noeuds au graphe
-        foreach (var noeud in noeuds.Values)
+        var lien = current.Liens.FirstOrDefault(l => l.Destination == next)
+                 ?? next.Liens.First(l => l.Destination == current);
+
+        if (lien == null)
         {
-            graphe.AjouterNoeud(noeud);
+            Console.WriteLine($"Erreur: Lien manquant entre {current.Libelle} et {next.Libelle}");
+            return;
         }
 
-        // Charger et créer les liens
-        var arcs = ChargerArcs("MetroParis(1).xlsx", noeuds);
-        foreach (var arc in arcs)
+        double distanceSegment = CalculerDistanceHaversine(
+            current.Latitude, current.Longitude,
+            next.Latitude, next.Longitude);
+
+        distanceTotale += distanceSegment;
+
+        // Vérifie si les stations partagent une ligne commune
+        var lignesCommunes = current.Lignes.Intersect(next.Lignes).ToList();
+        if (lignesCommunes.Count == 0) // Changement de ligne
         {
-            graphe.AjouterLien(arc.Item1, arc.Item2, arc.Item3);
+            Console.WriteLine($"  {(i + 1).ToString().PadLeft(2)}. {current.Libelle} -> {next.Libelle} ({lien.Poids} min, {distanceSegment:0.00} km)");
+            Console.WriteLine($"     [CHANGEMENT: {ligneActuelle} -> {next.Lignes.First()} | +{current.TempsChangement} min]");
+            tempsTotal += lien.Poids + current.TempsChangement;
+            tempsTrajet += lien.Poids;
+            nbChangements++;
+            ligneActuelle = next.Lignes.First();
         }
-
-        // Afficher le graphe avec SkiaSharp
-        AfficherGraphe(graphe, "metro_paris.png");
-
+        else // Même ligne
+        {
+            Console.WriteLine($"  {(i + 1).ToString().PadLeft(2)}. {current.Libelle} -> {next.Libelle} ({lien.Poids} min, {distanceSegment:0.00} km)");
+            tempsTotal += lien.Poids;
+            tempsTrajet += lien.Poids;
+        }
     }
+
+    Console.WriteLine($"\n SYNTHÈSE DU TRAJET:");
+    Console.WriteLine($"• Temps de trajet: {tempsTrajet} minutes");
+    Console.WriteLine($"• Temps de changement: {tempsTotal - tempsTrajet} minutes");
+    Console.WriteLine($"• Temps total: {tempsTotal} minutes");
+    Console.WriteLine($"• Distance totale: {distanceTotale:0.00} km");
+    Console.WriteLine($"• Stations: {chemin.Count}");
+    Console.WriteLine($"• Changements: {nbChangements}");
+    Console.WriteLine("------------------------------------------------");
+}
 
     /// <summary>
     /// Charge les noeuds (stations) 
