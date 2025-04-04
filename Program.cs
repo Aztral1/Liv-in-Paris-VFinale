@@ -19,10 +19,10 @@ class Program
     {
         while (true)
         {
-            Console.WriteLine("\n--- Bienvenue ---");
-            Console.WriteLine("1. Connexion");
-            Console.WriteLine("2. Créer un compte");
-            Console.WriteLine("3. Quitter");
+            Console.WriteLine("\n*** Liv'in Paris metro ***");
+            Console.WriteLine("1) Connexion");
+            Console.WriteLine("2) Création compte");
+            Console.WriteLine("3) Quitter");
             Console.Write("Choisissez une option : ");
             string choix = Console.ReadLine();
 
@@ -35,11 +35,13 @@ class Program
                     CreerCompte();
                     break;
                 case "3":
-                    Console.WriteLine("Au revoir !");
+                    Console.WriteLine("Au revoir, à bientôt!");
                     return;
                 default:
-                    Console.WriteLine("Option invalide, veuillez réessayer.");
+                    Console.WriteLine("Option invalide, veuillez réessayer :(");
                     break;
+                    //case "4":
+
             }
         }
     }
@@ -50,34 +52,30 @@ class Program
             Console.Write("\nEmail : ");
             string email = Console.ReadLine();
             Console.Write("Mot de passe : ");
-            string password = Console.ReadLine();
+            string mdp = Console.ReadLine();
 
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 connection.Open();
-                string query = @"SELECT 'Client' AS Role, idClient AS idUtilisateur, nom, prenom 
-                             FROM Client 
-                             WHERE email = @Email AND motDePasse = @Password
-                             UNION
-                             SELECT 'Cuisinier', idCuisinier AS idUtilisateur, nom, prenom 
-                             FROM Cuisinier 
-                             WHERE email = @Email AND motDePasse = @Password";
+                string requeteSql = @"SELECT 'Client' AS Role, idClient AS idUtilisateur, nom, prenom  FROM Client WHERE email = @Email AND motDePasse = @mdp
+                                  UNION
+                                  SELECT 'Cuisinier', idCuisinier AS idUtilisateur, nom, prenom FROM Cuisinier WHERE email = @Email AND motDePasse = @mdp"; 
 
-                MySqlCommand command = new MySqlCommand(query, connection);
-                command.Parameters.AddWithValue("@Email", email);
-                command.Parameters.AddWithValue("@Password", password);
+                MySqlCommand commandesql = new MySqlCommand(requeteSql, connection); 
+                commandesql.Parameters.AddWithValue("@Email", email);
+                commandesql.Parameters.AddWithValue("@mdp", mdp); 
 
-                using (MySqlDataReader reader = command.ExecuteReader())
+                using (MySqlDataReader lecteur = commandesql.ExecuteReader())
                 {
-                    if (reader.Read())
+                    if (lecteur.Read())
                     {
-                        string role = reader["Role"].ToString();
-                        int idUtilisateur = Convert.ToInt32(reader["idUtilisateur"]);
-                        string prenom = reader["prenom"].ToString();
-                        string nom = reader["nom"].ToString();
+                        string role = lecteur["Role"].ToString();
+                        int idUtilisateur = Convert.ToInt32(lecteur["idUtilisateur"]);
+                        string prenom = lecteur["prenom"].ToString();
+                        string nom = lecteur["nom"].ToString();
 
                         Console.WriteLine($"\nBienvenue, {prenom} {nom} ({role}) !");
-                        reader.Close();
+                        lecteur.Close();
 
                         if (role == "Client")
                             MenuClient(idUtilisateur);
@@ -94,9 +92,10 @@ class Program
             }
         }
     }
+
     static void CreerCompte()
     {
-        Console.Write("\nVous êtes : 1. Client  2. Cuisinier\nChoix : ");
+        Console.Write("\nVous êtes : 1) Client  2) Cuisinier\nChoix : ");
         string role = Console.ReadLine();
 
         Console.Write("Nom : ");
@@ -124,15 +123,15 @@ class Program
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             connection.Open();
-            string query = "";
+            string requetesql = "";
 
             if (role == "1")  // Inscription en tant que Client
             {
-                query = "INSERT INTO Client (nom, prenom, email, motDePasse, rue, numMaison, codePostal, numTel, ville, totalCommande, metroProche) VALUES (@Nom, @Prenom, @Email, @motDePasse, @rue, @numMaison, @codePostal, @numTel, @ville, @totalCommande, @metroProche)";
+                requetesql = "INSERT INTO Client (nom, prenom, email, motDePasse, rue, numMaison, codePostal, numTel, ville, totalCommande, metroProche) VALUES (@Nom, @Prenom, @Email, @motDePasse, @rue, @numMaison, @codePostal, @numTel, @ville, @totalCommande, @metroProche)";
             }
             else if (role == "2")  // Inscription en tant que Cuisinier
             {
-                query = "INSERT INTO Cuisinier (nom, prenom, email, motDePasse, rue, numMaison, codePostal, numTel, ville, totalCommande, metroProche) VALUES (@Nom, @Prenom, @Email, @motDePasse, @rue, @numMaison, @codePostal, @numTel, @ville, @totalCommande, @metroProche)";
+                requetesql = "INSERT INTO Cuisinier (nom, prenom, email, motDePasse, rue, numMaison, codePostal, numTel, ville, totalCommande, metroProche) VALUES (@Nom, @Prenom, @Email, @motDePasse, @rue, @numMaison, @codePostal, @numTel, @ville, @totalCommande, @metroProche)";
             }
             else
             {
@@ -140,26 +139,31 @@ class Program
                 return;
             }
 
-            MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@Nom", nom);
-            command.Parameters.AddWithValue("@Prenom", prenom);
-            command.Parameters.AddWithValue("@Email", email);
-            command.Parameters.AddWithValue("@motDePasse", mdp);
-            command.Parameters.AddWithValue("@rue", rue);
-            command.Parameters.AddWithValue("@numMaison", numMaison);
-            command.Parameters.AddWithValue("@codePostal", codePostal);
-            command.Parameters.AddWithValue("@numTel", numTel);
-            command.Parameters.AddWithValue("@ville", ville);
-            command.Parameters.AddWithValue("@totalCommande", totalCommande);
-            command.Parameters.AddWithValue("@metroProche", metroProche);
+            MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
+            commandesql.Parameters.AddWithValue("@Nom", nom);
+            commandesql.Parameters.AddWithValue("@Prenom", prenom);
+            commandesql.Parameters.AddWithValue("@Email", email);
+            commandesql.Parameters.AddWithValue("@motDePasse", mdp);
+            commandesql.Parameters.AddWithValue("@rue", rue);
+            commandesql.Parameters.AddWithValue("@numMaison", numMaison);
+            commandesql.Parameters.AddWithValue("@codePostal", codePostal);
+            commandesql.Parameters.AddWithValue("@numTel", numTel);
+            commandesql.Parameters.AddWithValue("@ville", ville);
+            commandesql.Parameters.AddWithValue("@totalCommande", totalCommande);
+            commandesql.Parameters.AddWithValue("@metroProche", metroProche);
 
 
+            int ligneaff = commandesql.ExecuteNonQuery();
+            if (ligneaff > 0)
+            {
+                Console.WriteLine("Compte créé avec succès !");
+            }
+            else
+            {
+                Console.WriteLine("Erreur lors de la création du compte.");
+            }
 
 
-
-
-            int rowsAffected = command.ExecuteNonQuery();
-            Console.WriteLine(rowsAffected > 0 ? "Compte créé avec succès !" : "Erreur lors de la création du compte.");
         }
     }
     static void MenuClient(int idClient)
@@ -169,11 +173,11 @@ class Program
 
         while (true)
         {
-            Console.WriteLine("\n--- Menu Client ---");
-            Console.WriteLine("1. Ajouter un plat à la commande");
-            Console.WriteLine("2. Voir les cuisiniers disponibles");
-            Console.WriteLine("3. Régler la commande");
-            Console.WriteLine("4. Se déconnecter");
+            Console.WriteLine("\n*** Menu Client ***");
+            Console.WriteLine("1) Ajouter un plat à la commande");
+            Console.WriteLine("2) Voir les cuisiniers disponibles");
+            Console.WriteLine("3) Régler la commande");
+            Console.WriteLine("4) Se déconnecter");
             Console.Write("Choisissez une option : ");
             string choix = Console.ReadLine();
 
@@ -202,13 +206,14 @@ class Program
     {
         while (true)
         {
-            Console.WriteLine("\n--- Menu Cuisinier ---");
-            Console.WriteLine("1. Modifier mon menu");
-            Console.WriteLine("2. Voir mes plats");
-            Console.WriteLine("3. Voir mes clients");
-            Console.WriteLine("4. Voir les commandes à préparer");
-            Console.WriteLine("5. Mettre à jour le statut d'une commande");
-            Console.WriteLine("6. Se déconnecter");
+            Console.WriteLine("\n*** Menu Cuisinier ***");
+            Console.WriteLine("1) Modifier mon menu");
+            Console.WriteLine("2) Voir mes plats");
+            Console.WriteLine("3) Voir mes clients");
+            Console.WriteLine("4) Voir les commandes à préparer");
+            Console.WriteLine("5) Mettre à jour le statut d'une commande");
+            Console.WriteLine("6) Voir les commandes réalisées");
+            Console.WriteLine("7) Se déconnecter");
             Console.Write("Choisissez une option : ");
             string choix = Console.ReadLine();
 
@@ -230,6 +235,9 @@ class Program
                     Mettreàjourcommande();
                     break;
                 case "6":
+                    VoirCommandesRealisee(idCuisinier);
+                    break;
+                case "7":
                     return;
                 default:
                     Console.WriteLine("Option invalide, veuillez réessayer.");
@@ -257,23 +265,30 @@ class Program
             connection.Open();
 
             // Insertion du plat avec idCuisinier
-            string query = "INSERT INTO Plat (nomPlat, regime, prix, nationalite, dateFabrication, datePeremption, idCuisinier) " +
+            string requetesql = "INSERT INTO Plat (nomPlat, regime, prix, nationalite, dateFabrication, datePeremption, idCuisinier) " +
                            "VALUES (@nomPlat, @regime, @prix, @nationalite, @dateFabrication, @datePeremption, @idCuisinier)";
 
-            MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@nomPlat", nomPlat);
-            command.Parameters.AddWithValue("@regime", regime);
-            command.Parameters.AddWithValue("@prix", prix);
-            command.Parameters.AddWithValue("@nationalite", nationalite);
-            command.Parameters.AddWithValue("@dateFabrication", dateFabrication);
-            command.Parameters.AddWithValue("@datePeremption", datePeremption);
-            command.Parameters.AddWithValue("@idCuisinier", idCuisinier);
+            MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
+            commandesql.Parameters.AddWithValue("@nomPlat", nomPlat);
+            commandesql.Parameters.AddWithValue("@regime", regime);
+            commandesql.Parameters.AddWithValue("@prix", prix);
+            commandesql.Parameters.AddWithValue("@nationalite", nationalite);
+            commandesql.Parameters.AddWithValue("@dateFabrication", dateFabrication);
+            commandesql.Parameters.AddWithValue("@datePeremption", datePeremption);
+            commandesql.Parameters.AddWithValue("@idCuisinier", idCuisinier);
 
-            int rowsAffected = command.ExecuteNonQuery();
-            Console.WriteLine(rowsAffected > 0 ? "Plat ajouté avec succès !" : "Erreur lors de l'ajout du plat.");
+            int ligneaff = commandesql.ExecuteNonQuery();
+            if (ligneaff > 0)
+            {
+                Console.WriteLine("Plat ajouté !");
+            }
+            else
+            {
+                Console.WriteLine("Erreur lors de l'ajout du plat");
+            }
 
             // Récupérer l'ID du plat inséré
-            long idPlat = command.LastInsertedId;
+            long idPlat = commandesql.LastInsertedId;
 
             // Ajout des ingrédients
             AjouterIngredients(idPlat, connection);
@@ -288,29 +303,29 @@ class Program
             connection.Open();
 
             // Requête pour récupérer les plats du cuisinier avec idPlat
-            string query = "SELECT idPlat, nomPlat, regime, nationalite, prix FROM Plat WHERE idCuisinier = @idCuisinier;";
-            MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@idCuisinier", idCuisinier);
+            string requetesql = "SELECT idPlat, nomPlat, regime, nationalite, prix FROM Plat WHERE idCuisinier = @idCuisinier;";
+            MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
+            commandesql.Parameters.AddWithValue("@idCuisinier", idCuisinier);
 
-            using (MySqlDataReader reader = command.ExecuteReader())
+            using (MySqlDataReader lecteur = commandesql.ExecuteReader())
             {
-                if (!reader.HasRows)
+                if (!lecteur.HasRows)
                 {
                     Console.WriteLine("Aucun plat trouvé pour ce cuisinier.");
                 }
                 else
                 {
                     Console.WriteLine("\n--- Liste des plats ---");
-                    while (reader.Read())
+                    while (lecteur.Read())
                     {
-                        string nomPlat = reader["nomPlat"].ToString();
-                        string regime = reader["regime"].ToString();
-                        double prix = Convert.ToDouble(reader["prix"]);
-                        string nationalite = reader["nationalite"].ToString();
-                        int idPlat = Convert.ToInt32(reader["idPlat"]); // Récupérer idPlat
+                        string nomPlat = lecteur["nomPlat"].ToString();
+                        string regime = lecteur["regime"].ToString();
+                        double prix = Convert.ToDouble(lecteur["prix"]);
+                        string nationalite = lecteur["nationalite"].ToString();
+                        int idPlat = Convert.ToInt32(lecteur["idPlat"]); // Récupérer idPlat
 
                         // Affichage des informations du plat
-                        Console.WriteLine($"\nNom : {nomPlat}, Régime : {regime}, Prix : {prix}€");
+                        Console.WriteLine($"\nNom : {nomPlat}, Régime : {regime}, Prix : {prix} euro");
                         Console.WriteLine($"Nationalité : {nationalite}");
 
                         // Récupérer les ingrédients pour ce plat
@@ -337,31 +352,22 @@ class Program
         {
             connection.Open();
 
-            string query = @"
-        SELECT 
-            Cuisinier.nom AS nomCuisinier,
-            Plat.idPlat,
-            Plat.nomPlat,
-            Plat.regime,
-            Plat.prix
-        FROM Cuisinier
-        JOIN Plat ON Plat.idCuisinier = Cuisinier.idCuisinier";
+            string requetesql = @"SELECT Cuisinier.nom AS nomCuisinier, Plat.idPlat, Plat.nomPlat, Plat.regime, Plat.prix FROM Cuisinier JOIN Plat ON Plat.idCuisinier = Cuisinier.idCuisinier";// AS pour éviter les confusions
 
-            MySqlCommand command = new MySqlCommand(query, connection);
-            MySqlDataReader reader = command.ExecuteReader();
+            MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
+            MySqlDataReader lecteur = commandesql.ExecuteReader();
 
-            Console.WriteLine("\n--- Cuisiniers Disponibles ---");
-            while (reader.Read())
+            Console.WriteLine("\n*** Cuisiniers Disponibles ***");
+            while (lecteur.Read())
             {
-                int idPlat = Convert.ToInt32(reader["idPlat"]);
-                string nomCuisinier = reader["nomCuisinier"].ToString();
-                string nomPlat = reader["nomPlat"].ToString();
-                string regime = reader["regime"].ToString();
-                double prix = Convert.ToDouble(reader["prix"]);
+                int idPlat = Convert.ToInt32(lecteur["idPlat"]);
+                string nomCuisinier = lecteur["nomCuisinier"].ToString();
+                string nomPlat = lecteur["nomPlat"].ToString();
+                string regime = lecteur["regime"].ToString();
+                double prix = Convert.ToDouble(lecteur["prix"]);
 
                 Console.WriteLine($"\nNom: {nomCuisinier}, Plat: {nomPlat}, Régime: {regime}, Prix: {prix} euro");
 
-                // Appelle la nouvelle fonction
                 List<string> ingredients = RecupererIngredients(idPlat);
                 if (ingredients.Count > 0)
                     Console.WriteLine($"Ingrédients : {string.Join(", ", ingredients)}");
@@ -379,15 +385,15 @@ class Program
         {
             connection.Open();
 
-            string query = "SELECT nom FROM Ingredient WHERE idPlat = @idPlat";
-            MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@idPlat", idPlat);
+            string requetesql = "SELECT nom FROM Ingredient WHERE idPlat = @idPlat";
+            MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
+            commandesql.Parameters.AddWithValue("@idPlat", idPlat);
 
-            using (MySqlDataReader reader = command.ExecuteReader())
+            using (MySqlDataReader lecteur = commandesql.ExecuteReader())
             {
-                while (reader.Read())
+                while (lecteur.Read())
                 {
-                    ingredients.Add(reader["nom"].ToString());
+                    ingredients.Add(lecteur["nom"].ToString());
                 }
             }
         }
@@ -395,35 +401,29 @@ class Program
         return ingredients;
     }
 
-
-
     static void VoirClients(int idCuisinier)
     {
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             connection.Open();
 
-            string query = @"
-        SELECT DISTINCT client.nom, client.prenom, client.email, client.numTel 
-        FROM Client 
-        JOIN Commande ON Client.idClient = Commande.idClient
-        WHERE Commande.idCuisinier = @idCuisinier;";
+            string requetesql = @"SELECT DISTINCT client.nom, client.prenom, client.email, client.numTel FROM Client JOIN Commande ON Client.idClient = Commande.idClient WHERE Commande.idCuisinier = @idCuisinier;";
 
-            MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@idCuisinier", idCuisinier);
+            MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
+            commandesql.Parameters.AddWithValue("@idCuisinier", idCuisinier);
 
-            using (MySqlDataReader reader = command.ExecuteReader())
+            using (MySqlDataReader lecteur = commandesql.ExecuteReader())
             {
-                if (!reader.HasRows)
+                if (!lecteur.HasRows)
                 {
                     Console.WriteLine("Aucun client trouvé.");
                 }
                 else
                 {
-                    Console.WriteLine("\n--- Liste des clients ---");
-                    while (reader.Read())
+                    Console.WriteLine("\n*** Liste des clients ***");
+                    while (lecteur.Read())
                     {
-                        Console.WriteLine($"Nom: {reader["nom"]}, Prénom: {reader["prenom"]}, Email: {reader["email"]}, Téléphone: {reader["numTel"]}");
+                        Console.WriteLine($"Nom: {lecteur["nom"]}, Prénom: {lecteur["prenom"]}, Email: {lecteur["email"]}, Téléphone: {lecteur["numTel"]}");
                     }
                 }
             }
@@ -440,19 +440,19 @@ class Program
             connection.Open();
 
             // Vérifier si le plat existe
-            string checkQuery = "SELECT prix FROM Plat WHERE nomPlat = @nomPlat";
-            MySqlCommand checkCmd = new MySqlCommand(checkQuery, connection);
-            checkCmd.Parameters.AddWithValue("@nomPlat", nomPlat);
+            string requetesql = "SELECT prix FROM Plat WHERE nomPlat = @nomPlat";
+            MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
+            commandesql.Parameters.AddWithValue("@nomPlat", nomPlat);
 
-            using (MySqlDataReader reader = checkCmd.ExecuteReader())
+            using (MySqlDataReader lecteur = commandesql.ExecuteReader())
             {
-                if (!reader.Read()) // Si aucun plat trouvé
+                if (!lecteur.Read()) // Si aucun plat trouvé
                 {
                     Console.WriteLine("Plat inexistant, veuillez recommencer.");
                     return 0;
                 }
 
-                double prix = Convert.ToDouble(reader["prix"]);
+                double prix = Convert.ToDouble(lecteur["prix"]);
                 platsCommandes.Add(nomPlat);
 
                 Console.WriteLine($"Plat ajouté : {nomPlat} ({prix} euro)");
@@ -468,9 +468,9 @@ class Program
             return;
         }
 
-        string nomPlat = platsCommandes[0]; // Un seul plat pour simplifier
+        string nomPlat = platsCommandes[0]; 
 
-        Console.WriteLine("\n--- Récapitulatif de la commande ---");
+        Console.WriteLine("\n*** Récapitulatif de la commande ***");
         Console.WriteLine($"Plat : {nomPlat}");
         Console.WriteLine($"Total à payer : {totalPrix} euro");
 
@@ -502,38 +502,36 @@ class Program
         {
             connection.Open();
 
-            // 👉 Étape : récupérer l'idCuisinier qui a fait ce plat
-            string queryCuisinier = "SELECT idCuisinier FROM Plat WHERE nomPlat = @nomPlat";
-            MySqlCommand cmd = new MySqlCommand(queryCuisinier, connection);
-            cmd.Parameters.AddWithValue("@nomPlat", nomPlat);
+            string requetecuisinier = "SELECT idCuisinier FROM Plat WHERE nomPlat = @nomPlat";
+            MySqlCommand commandecuisinier = new MySqlCommand(requetecuisinier, connection);
+            commandecuisinier.Parameters.AddWithValue("@nomPlat", nomPlat);
 
-            object result = cmd.ExecuteScalar();
+            object resultat = commandecuisinier.ExecuteScalar();
 
-            if (result == null)
+            if (resultat == null)
             {
-                Console.WriteLine("⚠️ Ce plat n'existe pas !");
+                Console.WriteLine("Ce plat n'existe pas !");
                 return;
             }
 
-            int idCuisinier = Convert.ToInt32(result);
+            int idCuisinier = Convert.ToInt32(resultat);
 
-            // 👉 Insertion de la commande avec l'idCuisinier récupéré
-            string insertQuery = @"INSERT INTO Commande (nom, prix, tempsPreparation, statut, date, idClient, commentaire, idCuisinier)
+            string requetesql = @"INSERT INTO Commande (nom, prix, tempsPreparation, statut, date, idClient, commentaire, idCuisinier)
                                VALUES (@nom, @prix, @tempsPreparation, @statut, @date, @idClient, @commentaire, @idCuisinier)";
 
-            MySqlCommand insertCmd = new MySqlCommand(insertQuery, connection);
-            insertCmd.Parameters.AddWithValue("@nom", nomPlat);
-            insertCmd.Parameters.AddWithValue("@prix", totalPrix);
-            insertCmd.Parameters.AddWithValue("@tempsPreparation", 30); // temporaire
-            insertCmd.Parameters.AddWithValue("@statut", "en attente");
-            insertCmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd"));
-            insertCmd.Parameters.AddWithValue("@idClient", idClient);
-            insertCmd.Parameters.AddWithValue("@commentaire", commentaire);
-            insertCmd.Parameters.AddWithValue("@idCuisinier", idCuisinier);
+            MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
+            commandesql.Parameters.AddWithValue("@nom", nomPlat);
+            commandesql.Parameters.AddWithValue("@prix", totalPrix);
+            commandesql.Parameters.AddWithValue("@tempsPreparation", 30); // temporaire
+            commandesql.Parameters.AddWithValue("@statut", "en attente");
+            commandesql.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd"));
+            commandesql.Parameters.AddWithValue("@idClient", idClient);
+            commandesql.Parameters.AddWithValue("@commentaire", commentaire);
+            commandesql.Parameters.AddWithValue("@idCuisinier", idCuisinier);
 
-            insertCmd.ExecuteNonQuery();
+            commandesql.ExecuteNonQuery();
 
-            Console.WriteLine("\n✅ Paiement effectué avec succès !");
+            Console.WriteLine("\nPaiement effectué avec succès !");
             Console.WriteLine("Merci pour votre commande !");
         }
     }
@@ -552,15 +550,15 @@ class Program
             string origine = Console.ReadLine();
           
 
-            string query = "INSERT INTO ingredient (nom,  origine, idPlat) " +
+            string requetesql = "INSERT INTO ingredient (nom,  origine, idPlat) " +
                            "VALUES (@nom, @origine, @idPlat)";
 
-            MySqlCommand cmd = new MySqlCommand(query, connection);
-            cmd.Parameters.AddWithValue("@nom", nomIngredient);
-            cmd.Parameters.AddWithValue("@origine", origine);
-            cmd.Parameters.AddWithValue("@idPlat", idPlat);
+            MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
+            commandesql.Parameters.AddWithValue("@nom", nomIngredient);
+            commandesql.Parameters.AddWithValue("@origine", origine);
+            commandesql.Parameters.AddWithValue("@idPlat", idPlat);
 
-            cmd.ExecuteNonQuery();
+            commandesql.ExecuteNonQuery();
             Console.WriteLine("Ingrédient ajouté !");
         }
     }
@@ -571,32 +569,61 @@ class Program
         {
             connection.Open();
 
-            string query = "SELECT idCommande, nom, prix, statut, date, idClient, commentaire " +
-                           "FROM commande WHERE idCuisinier = @idCuisinier";
+            string requetesql = "SELECT idCommande, nom, prix, statut, date, idClient, commentaire FROM commande WHERE (idCuisinier = @idCuisinier) and commande.statut='en attente'";
 
-            MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@idCuisinier", idCuisinier);
+            MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
+            commandesql.Parameters.AddWithValue("@idCuisinier", idCuisinier);
 
-            using (MySqlDataReader reader = command.ExecuteReader())
+            using (MySqlDataReader lecteur = commandesql.ExecuteReader())
             {
-                if (!reader.HasRows)
+                if (!lecteur.HasRows)
                 {
                     Console.WriteLine("Aucune commande à préparer.");
                     return;
                 }
 
                 Console.WriteLine("\nCommandes à préparer :");
-                while (reader.Read())
+                while (lecteur.Read())
                 {
-                    Console.WriteLine($"Commande #{reader["idCommande"]} - {reader["nom"]} - {reader["prix"]}€");
-                    Console.WriteLine($"Client: {reader["idClient"]} | Statut: {reader["statut"]} | Date: {reader["date"]}"); // mettre le temps estimée et la distance
-                    Console.WriteLine($"Commentaire: {reader["commentaire"]}\n");
+                    Console.WriteLine($"Commande #{lecteur["idCommande"]} - {lecteur["nom"]} - {lecteur["prix"]} euro");
+                    Console.WriteLine($"Client: {lecteur["idClient"]} | Statut: {lecteur["statut"]} | Date: {lecteur["date"]}"); // mettre le temps estimée et la distance
+                    Console.WriteLine($"Commentaire: {lecteur["commentaire"]}\n");
                 }
             }
             connection.Close();
         }
     }
 
+    static void VoirCommandesRealisee(int idCuisinier)
+    {
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            connection.Open();
+
+            string requetesql = "SELECT idCommande, nom, prix, statut, date, idClient, commentaire FROM commande WHERE (idCuisinier = @idCuisinier) not in (commande.statut='en attente')";
+
+            MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
+            commandesql.Parameters.AddWithValue("@idCuisinier", idCuisinier);
+
+            using (MySqlDataReader lecteur = commandesql.ExecuteReader())
+            {
+                if (!lecteur.HasRows)
+                {
+                    Console.WriteLine("Aucune commande à préparer.");
+                    return;
+                }
+
+                Console.WriteLine("\nCommandes à préparer :");
+                while (lecteur.Read())
+                {
+                    Console.WriteLine($"Commande #{lecteur["idCommande"]} - {lecteur["nom"]} - {lecteur["prix"]} euro");
+                    Console.WriteLine($"Client: {lecteur["idClient"]} | Statut: {lecteur["statut"]} | Date: {lecteur["date"]}"); 
+                    Console.WriteLine($"Commentaire: {lecteur["commentaire"]}\n");
+                }
+            }
+            connection.Close();
+        }
+    }
     static void Mettreàjourcommande()
     {
         using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -606,12 +633,20 @@ class Program
             Console.WriteLine("Quel est le nouveau statut de la commande ?");
             string nouveauStatut = Console.ReadLine();
             connection.Open();
-            string query = "UPDATE Commande SET statut = @statut WHERE idCommande =@idCommande ";
-            MySqlCommand command = new MySqlCommand(query, connection);
-            command.Parameters.AddWithValue("@idCommande", idCommande);
-            command.Parameters.AddWithValue("@statut", nouveauStatut);
-            int rowsAffected = command.ExecuteNonQuery();
-            Console.WriteLine(rowsAffected > 0 ? "Commande mise à jour avec succès !" : "Erreur lors de la mise à jour de la commande.");
+            string requetesql = "UPDATE Commande SET statut = @statut WHERE idCommande =@idCommande ";
+            MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
+            commandesql.Parameters.AddWithValue("@idCommande", idCommande);
+            commandesql.Parameters.AddWithValue("@statut", nouveauStatut);
+          
+            int ligneaff = commandesql.ExecuteNonQuery();
+            if (ligneaff > 0)
+            {
+                Console.WriteLine("Commande mise à jour avec succès ");
+            }
+            else
+            {
+                Console.WriteLine("Erreur lors de la mise à jour de la commande");
+            }
         }
     }
 
@@ -808,5 +843,20 @@ class Program
         }
 
         Console.WriteLine($"Carte du métro sauvegardée dans {nomFichier}");
+    }
+
+    static double DegresToRadians(double deg) => deg * (Math.PI / 180);
+    static double CalculerDistanceHaversine(double lat1, double lon1, double lat2, double lon2)
+    {
+        const double R = 6371; // Rayon terrestre en km
+        var dLat = DegresToRadians(lat2 - lat1);
+        var dLon = DegresToRadians(lon2 - lon1);
+
+        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                Math.Cos(DegresToRadians(lat1)) * Math.Cos(DegresToRadians(lat2)) *
+                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+
+        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+        return R * c;
     }
 }
