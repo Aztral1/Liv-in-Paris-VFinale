@@ -6,35 +6,61 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+/// <summary>
+/// Classe représentant un graphe générique composé de noeuds et liens
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public class Graphe<T> where T : notnull
 {
-        /// Représente un graphe composé de nœuds et de liens génériques.
-        private Dictionary<T, Noeud<T>> noeuds = new Dictionary<T, Noeud<T>>();
+              
+        private Dictionary<T, Noeud<T>> noeuds = new Dictionary<T, Noeud<T>>(); // dictionnaire pour stocker les noeuds
         private int[,] Matriceadjacence = new int[0, 0]; // Initialisation vide
-        public void AjouterNoeud(Noeud<T> noeud) => Noeuds.Add(noeud);
+
+        /// <summary>
         /// Ajoute un nœud au graphe.
-        /// Ajoute un lien entre deux nœuds.
+        /// </summary>
+        /// <param name="noeud"></param>        
+        public void AjouterNoeud(Noeud<T> noeud) => Noeuds.Add(noeud);
+        
+
+        /// <summary>
+        /// Ajoute un lien entre deux nœuds, avec un poids. Peut être bidirectionnel ou non.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="destination"></param>
+        /// <param name="poids"></param>
+        /// <param name="bidirectionnel"></param>        
         public void AjouterLien(Noeud<T> source, Noeud<T> destination, double poids, bool bidirectionnel = true)
         {
-            var lien = new Lien<T>(source, destination, poids);
-            Liens.Add(lien);
-            source.AjouterLien(destination, poids, bidirectionnel);
+            var lien = new Lien<T>(source, destination, poids); // création du lien
+            Liens.Add(lien); // ajout au graphe
+            source.AjouterLien(destination, poids, bidirectionnel); // mise à jour des voisins
         }
-        
+
+
+        /// <summary>
+        /// Génère une image du graphe en PNG avec SkiaSharp.
+        /// </summary>
+        /// <param name="nomFichier"></param>
+        /// <param name="chemin"></param>
         public void AfficherGraphe(string nomFichier, List<Noeud<T>> chemin = null)
     {
-        const int width = 2000, height = 2000, marge = 50;
+        const int width = 2000, height = 2000, marge = 50; // dimension de l'image et des marges
+
+        // détermination des limites géographiques pour le placement des noeuds
         double minLon = Noeuds.Min(n => n.Longitude);
         double maxLon = Noeuds.Max(n => n.Longitude);
         double minLat = Noeuds.Min(n => n.Latitude);
         double maxLat = Noeuds.Max(n => n.Latitude);
 
+
+        // création de la surface de dessin 
         using (var surface = SKSurface.Create(new SKImageInfo(width, height)))
         {
             var canvas = surface.Canvas;
-            canvas.Clear(SKColors.White);
+            canvas.Clear(SKColors.White);  // défini un fond blanc 
 
-            // Styles prédéfinis
+            // styles prédéfinis
             var paintLienNormal = new SKPaint { Color = SKColors.LightGray, StrokeWidth = 3 };
             var paintLienChemin = new SKPaint { Color = SKColors.Blue, StrokeWidth = 6 };
             var paintNoeudNormal = new SKPaint { Color = SKColors.Red, Style = SKPaintStyle.Fill };
@@ -42,23 +68,27 @@ public class Graphe<T> where T : notnull
             var paintContour = new SKPaint { Color = SKColors.Black, Style = SKPaintStyle.Stroke, StrokeWidth = 2 };
             var paintTexte = new SKPaint { Color = SKColors.Black, TextSize = 16, TextAlign = SKTextAlign.Center };
 
-        // Dessin des liens
+        // dessin des liens
         foreach (var lien in Liens)
         {
+            // conversion des coordonnées géographiques en coordonnées écran
             float x1 = marge + (float)((lien.Source.Longitude - minLon) / (maxLon - minLon) * (width - 2 * marge));
             float y1 = marge + (float)((maxLat - lien.Source.Latitude) / (maxLat - minLat) * (height - 2 * marge));
             float x2 = marge + (float)((lien.Destination.Longitude - minLon) / (maxLon - minLon) * (width - 2 * marge));
             float y2 = marge + (float)((maxLat - lien.Destination.Latitude) / (maxLat - minLat) * (height - 2 * marge));
 
+            // vérifie si le lien fait partie du chemin à surligner
             bool estDansChemin = chemin != null && chemin.Contains(lien.Source) && chemin.Contains(lien.Destination)
                 && Math.Abs(chemin.IndexOf(lien.Source) - chemin.IndexOf(lien.Destination)) == 1;
-
+            
+            // dessine le lien avec une couleur différente s'il fait partie du chemin
             canvas.DrawLine(x1, y1, x2, y2, estDansChemin ? paintLienChemin : paintLienNormal);
         }
 
         // Dessin des nœuds
             foreach (var noeud in Noeuds)
             {
+                // transforme les coordonnées GPS en pixels
                 float x = marge + (float)((noeud.Longitude - minLon) / (maxLon - minLon) * (width - 2 * marge));
                 float y = marge + (float)((maxLat - noeud.Latitude) / (maxLat - minLat) * (height - 2 * marge));
 
@@ -66,6 +96,7 @@ public class Graphe<T> where T : notnull
 
                 if (estDansChemin)
                 {
+                    // dessine les cercle plus grand pour les noeuds faisant partie du chemin
                     canvas.DrawCircle(x, y, 10, paintNoeudChemin);
                     canvas.DrawCircle(x, y, 10, paintContour);
                 }
@@ -74,10 +105,11 @@ public class Graphe<T> where T : notnull
                     canvas.DrawCircle(x, y, 8, paintNoeudNormal);
                     canvas.DrawCircle(x, y, 8, paintContour);
                 }
-
+                // Ajout du libellé du noeud
                 canvas.DrawText(noeud.Libelle.ToString(), x, y - 15, paintTexte);
             }
 
+            // enregistre l'image finale dans un fichier PNG
             using (var image = surface.Snapshot())
             using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
             using (var stream = File.OpenWrite(nomFichier))
