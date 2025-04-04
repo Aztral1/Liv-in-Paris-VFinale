@@ -1,15 +1,30 @@
-
+    /// <summary>
+    /// Classe représentant un lien entre deux noeuds dans un graphe
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class Lien<T>
     {    
-        /// Identifiant du premier nœud    
+        /// <summary>
+        /// identifiant du premier nœud    
+        /// </summary>
         public T Noeud1 { get; set; }
-        /// Identifiant du deuxième nœud.
+
+        /// <summary>
+        /// identifiant du deuxième nœud.
+        /// </summary>
         public T Noeud2 { get; set; }
 
-        /// Poids du lien entre les deux nœuds
+        /// <summary>
+        /// poids du lien entre les deux nœuds
+        /// </summary>
         public double Poids { get; }
 
-        /// Constructeur qui initialise les deux nœuds et le poids du lien
+        /// <summary>
+        /// constructeur qui initialise les deux noeuds et le poids du lien
+        /// </summary>
+        /// <param name="noeud1"></param>
+        /// <param name="noeud2"></param>
+        /// <param name="poids"></param>
         public Lien(T noeud1, T noeud2, double poids)
         {
             Noeud1 = noeud1;
@@ -17,4 +32,3 @@
             Poids = poids;
         }
     }
-
