@@ -1,6 +1,6 @@
+-- Ceci est la dernière version de notre création de table, celle du rendu n°2
 create database premierRenduPSI;
 use premierRenduPSI;
-
 
 CREATE TABLE `client` (
    `idClient` int NOT NULL AUTO_INCREMENT,
