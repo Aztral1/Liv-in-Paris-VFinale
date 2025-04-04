@@ -44,80 +44,68 @@ public class Graphe<T> where T : notnull
         /// <param name="nomFichier"></param>
         /// <param name="chemin"></param>
         public void AfficherGraphe(string nomFichier, List<Noeud<T>> chemin = null)
+{
+    const int width = 2000, height = 2000, marge = 50;
+    double minLon = Noeuds.Min(n => n.Longitude);
+    double maxLon = Noeuds.Max(n => n.Longitude);
+    double minLat = Noeuds.Min(n => n.Latitude);
+    double maxLat = Noeuds.Max(n => n.Latitude);
+
+    using (var surface = SKSurface.Create(new SKImageInfo(width, height)))
     {
-        const int width = 2000, height = 2000, marge = 50; // dimension de l'image et des marges
+        var canvas = surface.Canvas;
+        canvas.Clear(SKColors.White);
 
-        // détermination des limites géographiques pour le placement des noeuds
-        double minLon = Noeuds.Min(n => n.Longitude);
-        double maxLon = Noeuds.Max(n => n.Longitude);
-        double minLat = Noeuds.Min(n => n.Latitude);
-        double maxLat = Noeuds.Max(n => n.Latitude);
+        // Styles prédéfinis
+        var paintLienNormal = new SKPaint { Color = SKColors.LightGray, StrokeWidth = 3 };
+        var paintLienChemin = new SKPaint { Color = SKColors.Blue, StrokeWidth = 6 };
+        var paintNoeud = new SKPaint { Color = SKColors.Red, Style = SKPaintStyle.Fill };
+        var paintContour = new SKPaint { Color = SKColors.Black, Style = SKPaintStyle.Stroke, StrokeWidth = 2 };
+        var paintTexte = new SKPaint { Color = SKColors.Black, TextSize = 16, TextAlign = SKTextAlign.Center };
 
-
-        // création de la surface de dessin 
-        using (var surface = SKSurface.Create(new SKImageInfo(width, height)))
-        {
-            var canvas = surface.Canvas;
-            canvas.Clear(SKColors.White);  // défini un fond blanc 
-
-            // styles prédéfinis
-            var paintLienNormal = new SKPaint { Color = SKColors.LightGray, StrokeWidth = 3 };
-            var paintLienChemin = new SKPaint { Color = SKColors.Blue, StrokeWidth = 6 };
-            var paintNoeudNormal = new SKPaint { Color = SKColors.Red, Style = SKPaintStyle.Fill };
-            var paintNoeudChemin = new SKPaint { Color = SKColors.Green, Style = SKPaintStyle.Fill };
-            var paintContour = new SKPaint { Color = SKColors.Black, Style = SKPaintStyle.Stroke, StrokeWidth = 2 };
-            var paintTexte = new SKPaint { Color = SKColors.Black, TextSize = 16, TextAlign = SKTextAlign.Center };
-
-        // dessin des liens
+        // Dessin des liens
         foreach (var lien in Liens)
         {
-            // conversion des coordonnées géographiques en coordonnées écran
             float x1 = marge + (float)((lien.Source.Longitude - minLon) / (maxLon - minLon) * (width - 2 * marge));
             float y1 = marge + (float)((maxLat - lien.Source.Latitude) / (maxLat - minLat) * (height - 2 * marge));
             float x2 = marge + (float)((lien.Destination.Longitude - minLon) / (maxLon - minLon) * (width - 2 * marge));
             float y2 = marge + (float)((maxLat - lien.Destination.Latitude) / (maxLat - minLat) * (height - 2 * marge));
 
-            // vérifie si le lien fait partie du chemin à surligner
             bool estDansChemin = chemin != null && chemin.Contains(lien.Source) && chemin.Contains(lien.Destination)
                 && Math.Abs(chemin.IndexOf(lien.Source) - chemin.IndexOf(lien.Destination)) == 1;
-            
-            // dessine le lien avec une couleur différente s'il fait partie du chemin
+
             canvas.DrawLine(x1, y1, x2, y2, estDansChemin ? paintLienChemin : paintLienNormal);
         }
 
         // Dessin des nœuds
-            foreach (var noeud in Noeuds)
+        foreach (var noeud in Noeuds)
+        {
+            float x = marge + (float)((noeud.Longitude - minLon) / (maxLon - minLon) * (width - 2 * marge));
+            float y = marge + (float)((maxLat - noeud.Latitude) / (maxLat - minLat) * (height - 2 * marge));
+
+            bool estDansChemin = chemin != null && chemin.Contains(noeud);
+
+            if (estDansChemin)
             {
-                // transforme les coordonnées GPS en pixels
-                float x = marge + (float)((noeud.Longitude - minLon) / (maxLon - minLon) * (width - 2 * marge));
-                float y = marge + (float)((maxLat - noeud.Latitude) / (maxLat - minLat) * (height - 2 * marge));
-
-                bool estDansChemin = chemin != null && chemin.Contains(noeud);
-
-                if (estDansChemin)
-                {
-                    // dessine les cercle plus grand pour les noeuds faisant partie du chemin
-                    canvas.DrawCircle(x, y, 10, paintNoeudChemin);
-                    canvas.DrawCircle(x, y, 10, paintContour);
-                }
-                else
-                {
-                    canvas.DrawCircle(x, y, 8, paintNoeudNormal);
-                    canvas.DrawCircle(x, y, 8, paintContour);
-                }
-                // Ajout du libellé du noeud
-                canvas.DrawText(noeud.Libelle.ToString(), x, y - 15, paintTexte);
+                canvas.DrawCircle(x, y, 10, paintNoeud);
+                canvas.DrawCircle(x, y, 10, paintContour);
+            }
+            else
+            {
+                canvas.DrawCircle(x, y, 8, paintNoeud);
             }
 
-            // enregistre l'image finale dans un fichier PNG
-            using (var image = surface.Snapshot())
-            using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
-            using (var stream = File.OpenWrite(nomFichier))
-            {
-                data.SaveTo(stream);
-            }
+            canvas.DrawText(noeud.Libelle.ToString(), x, y - 15, paintTexte);
+        }
+
+        using (var image = surface.Snapshot())
+        using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
+        using (var stream = File.OpenWrite(nomFichier))
+        {
+            data.SaveTo(stream);
         }
     }
+}
 }
 
 
