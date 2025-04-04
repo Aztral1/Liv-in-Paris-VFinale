@@ -287,8 +287,8 @@ class Program
         {
             connection.Open();
 
-            // Correction de la requête pour bien récupérer les plats du cuisinier
-            string query = "SELECT nomPlat, regime, nationalite, prix FROM Plat where Plat.idCuisinier = @idCuisinier;";
+            // Requête pour récupérer les plats du cuisinier avec idPlat
+            string query = "SELECT idPlat, nomPlat, regime, nationalite, prix FROM Plat WHERE idCuisinier = @idCuisinier;";
             MySqlCommand command = new MySqlCommand(query, connection);
             command.Parameters.AddWithValue("@idCuisinier", idCuisinier);
 
@@ -300,11 +300,29 @@ class Program
                 }
                 else
                 {
+                    Console.WriteLine("\n--- Liste des plats ---");
                     while (reader.Read())
                     {
-                        Console.WriteLine("\n--- Plat ---");
-                        Console.WriteLine($"Nom: {reader["nomPlat"]}, Régime: {reader["regime"]}, Prix: {reader["prix"]} euro");
-                        Console.WriteLine($"Nationalité: {reader["nationalite"]}");
+                        string nomPlat = reader["nomPlat"].ToString();
+                        string regime = reader["regime"].ToString();
+                        double prix = Convert.ToDouble(reader["prix"]);
+                        string nationalite = reader["nationalite"].ToString();
+                        int idPlat = Convert.ToInt32(reader["idPlat"]); // Récupérer idPlat
+
+                        // Affichage des informations du plat
+                        Console.WriteLine($"\nNom : {nomPlat}, Régime : {regime}, Prix : {prix}€");
+                        Console.WriteLine($"Nationalité : {nationalite}");
+
+                        // Récupérer les ingrédients pour ce plat
+                        List<string> ingredients = RecupererIngredients(idPlat);
+                        if (ingredients.Count > 0)
+                        {
+                            Console.WriteLine($"Ingrédients : {string.Join(", ", ingredients)}");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Ingrédients : Aucun");
+                        }
                     }
                 }
             }
@@ -312,24 +330,73 @@ class Program
             connection.Close();
         }
     }
+
     static void VoirCuisiniers()
     {
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             connection.Open();
-            string query = "SELECT * FROM Cuisinier JOIN Plat ON Plat.idCuisinier = Cuisinier.idCuisinier";
+
+            string query = @"
+        SELECT 
+            Cuisinier.nom AS nomCuisinier,
+            Plat.idPlat,
+            Plat.nomPlat,
+            Plat.regime,
+            Plat.prix
+        FROM Cuisinier
+        JOIN Plat ON Plat.idCuisinier = Cuisinier.idCuisinier";
+
             MySqlCommand command = new MySqlCommand(query, connection);
             MySqlDataReader reader = command.ExecuteReader();
-
-
 
             Console.WriteLine("\n--- Cuisiniers Disponibles ---");
             while (reader.Read())
             {
-                Console.WriteLine($"Nom: {reader["nom"]}, Plat :{reader["nomPlat"]}, régime :{reader["regime"]}, Prix :{reader["prix"]}");
+                int idPlat = Convert.ToInt32(reader["idPlat"]);
+                string nomCuisinier = reader["nomCuisinier"].ToString();
+                string nomPlat = reader["nomPlat"].ToString();
+                string regime = reader["regime"].ToString();
+                double prix = Convert.ToDouble(reader["prix"]);
+
+                Console.WriteLine($"\nNom: {nomCuisinier}, Plat: {nomPlat}, Régime: {regime}, Prix: {prix} euro");
+
+                // Appelle la nouvelle fonction
+                List<string> ingredients = RecupererIngredients(idPlat);
+                if (ingredients.Count > 0)
+                    Console.WriteLine($"Ingrédients : {string.Join(", ", ingredients)}");
+                else
+                    Console.WriteLine("Ingrédients : Aucun");
             }
         }
     }
+
+    static List<string> RecupererIngredients(int idPlat)
+    {
+        List<string> ingredients = new List<string>();
+
+        using (MySqlConnection connection = new MySqlConnection(connectionString))
+        {
+            connection.Open();
+
+            string query = "SELECT nom FROM Ingredient WHERE idPlat = @idPlat";
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@idPlat", idPlat);
+
+            using (MySqlDataReader reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    ingredients.Add(reader["nom"].ToString());
+                }
+            }
+        }
+
+        return ingredients;
+    }
+
+
+
     static void VoirClients(int idCuisinier)
     {
         using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -401,17 +468,19 @@ class Program
             return;
         }
 
+        string nomPlat = platsCommandes[0]; // Un seul plat pour simplifier
+
         Console.WriteLine("\n--- Récapitulatif de la commande ---");
-        Console.WriteLine($"Plats : {string.Join(", ", platsCommandes)}");
+        Console.WriteLine($"Plat : {nomPlat}");
         Console.WriteLine($"Total à payer : {totalPrix} euro");
 
-        Console.Write("\nSouhaitez-vous ajouter un commentaire pour les cuisiniers ? (oui/non) : ");
+        Console.Write("\nSouhaitez-vous ajouter un commentaire pour le cuisinier ? (oui/non) : ");
         string reponse = Console.ReadLine().ToLower();
         string commentaire = "";
 
         if (reponse == "oui")
         {
-            Console.Write("Écrivez votre commentaire (max 25 caractères) : ");
+            Console.Write("Écrivez votre commentaire (max 250 caractères) : ");
             commentaire = Console.ReadLine();
             if (commentaire.Length > 250)
             {
@@ -433,23 +502,39 @@ class Program
         {
             connection.Open();
 
-            // Insérer la commande dans la base de données
-            string insertQuery = @"INSERT INTO Commande (nom, prix, tempsPreparation, statut, date, idClient, commentaire,idCuisinier)
-                               VALUES (@nom, @prix, @tempsPreparation, @statut, @date, @idClient, @commentaire,)";///////////////////////////////:modifier
+            // 👉 Étape : récupérer l'idCuisinier qui a fait ce plat
+            string queryCuisinier = "SELECT idCuisinier FROM Plat WHERE nomPlat = @nomPlat";
+            MySqlCommand cmd = new MySqlCommand(queryCuisinier, connection);
+            cmd.Parameters.AddWithValue("@nomPlat", nomPlat);
+
+            object result = cmd.ExecuteScalar();
+
+            if (result == null)
+            {
+                Console.WriteLine("⚠️ Ce plat n'existe pas !");
+                return;
+            }
+
+            int idCuisinier = Convert.ToInt32(result);
+
+            // 👉 Insertion de la commande avec l'idCuisinier récupéré
+            string insertQuery = @"INSERT INTO Commande (nom, prix, tempsPreparation, statut, date, idClient, commentaire, idCuisinier)
+                               VALUES (@nom, @prix, @tempsPreparation, @statut, @date, @idClient, @commentaire, @idCuisinier)";
 
             MySqlCommand insertCmd = new MySqlCommand(insertQuery, connection);
-
-            insertCmd.Parameters.AddWithValue("@nom", string.Join(", ", platsCommandes)); // Concatène les plats
+            insertCmd.Parameters.AddWithValue("@nom", nomPlat);
             insertCmd.Parameters.AddWithValue("@prix", totalPrix);
-            insertCmd.Parameters.AddWithValue("@tempsPreparation", 30); // mettre le temps avec le graphe
+            insertCmd.Parameters.AddWithValue("@tempsPreparation", 30); // temporaire
             insertCmd.Parameters.AddWithValue("@statut", "en attente");
-            insertCmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd")); // Date actuelle
+            insertCmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd"));
             insertCmd.Parameters.AddWithValue("@idClient", idClient);
             insertCmd.Parameters.AddWithValue("@commentaire", commentaire);
+            insertCmd.Parameters.AddWithValue("@idCuisinier", idCuisinier);
 
             insertCmd.ExecuteNonQuery();
 
-            Console.WriteLine("Paiement effectué avec succès ! Commande enregistrée.\nTemps d'attente estimée à : " + 30 + " minutes\nDistance : 30 \nMerci et à bientôt !");// remplacer les 30 par le temps et la distance 
+            Console.WriteLine("\n✅ Paiement effectué avec succès !");
+            Console.WriteLine("Merci pour votre commande !");
         }
     }
 
@@ -459,7 +544,8 @@ class Program
         {
             Console.Write("\nNom de l'ingrédient (ou taper 'fin' pour arrêter) : ");
             string nomIngredient = Console.ReadLine();
-            if (nomIngredient.ToLower() == "fin") break;
+            if (nomIngredient.ToLower() == "fin") 
+                break;
 
            
             Console.Write("Origine : ");
