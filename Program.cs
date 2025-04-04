@@ -780,9 +780,10 @@ class Program
     /// </summary>
     /// <param name="fichierExcel"></param>
     /// <returns></returns>
-    static Dictionary<int, Noeud<string>> ChargerNoeuds(string fichierExcel)
+        static Dictionary<int, Noeud<string>> ChargerNoeuds(string fichierExcel)
     {
         var noeuds = new Dictionary<int, Noeud<string>>();
+        var stationsParNom = new Dictionary<string, List<Noeud<string>>>();
         string connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={fichierExcel};Extended Properties='Excel 12.0;HDR=YES;IMEX=1'";
 
         using (OleDbConnection connection = new OleDbConnection(connectionString))
@@ -791,43 +792,59 @@ class Program
             OleDbCommand command = new OleDbCommand("SELECT * FROM [Noeuds$]", connection);
             OleDbDataReader reader = command.ExecuteReader();
 
+            // 1. Chargement initial des nœuds
             while (reader.Read())
             {
-                try
+                int id = int.Parse(reader[0].ToString());
+                string libelleLigne = reader[1].ToString();
+                string libelleStation = reader[2].ToString().Trim();
+                double longitude = double.Parse(reader[3].ToString(), System.Globalization.CultureInfo.InvariantCulture);
+                double latitude = double.Parse(reader[4].ToString(), System.Globalization.CultureInfo.InvariantCulture);
+                string commune = reader[5].ToString();
+                string codeInsee = reader[6].ToString();
+                double tempsChangement = reader.FieldCount > 7 ? double.Parse(reader[7].ToString()) : 0;
+
+                var noeud = new Noeud<string>(
+                    id,
+                    libelleStation,
+                    libelleLigne,
+                    longitude,
+                    latitude,
+                    commune,
+                    codeInsee,
+                    tempsChangement);
+
+                noeuds.Add(id, noeud);
+
+                // Ajout au regroupement par nom de station
+                if (!stationsParNom.ContainsKey(libelleStation))
                 {
-                    int id = int.Parse(reader[0].ToString());
-                    string libelleLigne = reader[1].ToString();
-                    string libelleStation = reader[2].ToString();
-
-                    // Conversion directe avec culture invariante
-                    double longitude = double.Parse(reader[3].ToString(), System.Globalization.CultureInfo.InvariantCulture);
-                    double latitude = double.Parse(reader[4].ToString(), System.Globalization.CultureInfo.InvariantCulture);
-
-                    string commune = reader[5].ToString();
-                    string codeInsee = reader[6].ToString();
-
-                    // ajout du noeud dans le dictionnaire
-                    noeuds.Add(id, new Noeud<string>(id, libelleStation, libelleLigne, longitude, latitude, commune, codeInsee));
+                    stationsParNom[libelleStation] = new List<Noeud<string>>();
                 }
-                catch (Exception ex)
+                stationsParNom[libelleStation].Add(noeud);
+            }
+
+            // 2. Création des liens de correspondance
+            foreach (var groupe in stationsParNom.Where(g => g.Value.Count > 1))
+            {
+                var stations = groupe.Value;
+                for (int i = 0; i < stations.Count; i++)
                 {
-                    Console.WriteLine($"Erreur ligne {noeuds.Count + 2}: {ex.Message}");
+                    for (int j = i + 1; j < stations.Count; j++)
+                    {
+                        // Création d'un lien bidirectionnel avec le temps de changement
+                        stations[i].AjouterLien(stations[j], stations[i].TempsChangement, true);
+                    }
                 }
             }
         }
+
         return noeuds;
     }
 
-
-    /// <summary>
-    /// Charge les arcs (liaisons) entre stations
-    /// </summary>
-    /// <param name="fichierExcel"></param>
-    /// <param name="noeuds"></param>
-    /// <returns></returns>
     static List<Tuple<Noeud<string>, Noeud<string>, double>> ChargerArcs(string fichierExcel, Dictionary<int, Noeud<string>> noeuds)
     {
-        var arcs = new List<Tuple<Noeud<string>, Noeud<string>, double>>();
+        var arcs = new HashSet<Tuple<Noeud<string>, Noeud<string>, double>>(new ArcEqualityComparer());
         string connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={fichierExcel};Extended Properties='Excel 12.0;HDR=YES;IMEX=1'";
 
         using (OleDbConnection connection = new OleDbConnection(connectionString))
@@ -838,131 +855,70 @@ class Program
 
             while (reader.Read())
             {
-                int idStation = Convert.ToInt32(reader[0]);
-                string station = reader[1].ToString();
-                string precedentText = reader[2].ToString();
-                string suivantText = reader[3].ToString();
-                string tempsText = reader[4].ToString();
-
-                // on ignore si aucun temps n'est défini
-                if (string.IsNullOrEmpty(tempsText)) continue;
-
-                double temps = Convert.ToDouble(tempsText);
-
-                // Gérer les liens précédents
-                if (!string.IsNullOrEmpty(precedentText))
+                try
                 {
-                    int idPrecedent;
-                    if (int.TryParse(precedentText.Replace("=A", "").Replace("+1", ""), out idPrecedent))
+                    int idStation = Convert.ToInt32(reader[0]);
+                    if (!noeuds.ContainsKey(idStation)) continue;
+
+                    string tempsText = reader[4].ToString();
+                    if (string.IsNullOrEmpty(tempsText)) continue;
+                    double temps = Convert.ToDouble(tempsText);
+
+                    
+                    // Gestion des liens précédents
+                    if (!string.IsNullOrEmpty(reader[2].ToString()))
                     {
-                        if (noeuds.ContainsKey(idPrecedent))
-                        {
-                            arcs.Add(Tuple.Create(noeuds[idPrecedent], noeuds[idStation], temps));
-                        }
+                        int idPrecedent = ParseId(reader[2].ToString());
+
+                        
+                            var precedent = noeuds[idPrecedent];
+                            var current = noeuds[idStation];
+                            arcs.Add(Tuple.Create(precedent, current, temps));
+                            arcs.Add(Tuple.Create(current, precedent, temps));
+                        
+                    }
+
+                    // Gestion des liens suivants
+                    if (!string.IsNullOrEmpty(reader[3].ToString()))
+                    {
+                        int idSuivant = ParseId(reader[3].ToString());
+
+                            var current = noeuds[idStation];
+                            var suivant = noeuds[idSuivant];
+                            arcs.Add(Tuple.Create(current, suivant, temps));
+                            arcs.Add(Tuple.Create(suivant, current, temps));
+                        
                     }
                 }
-
-                // Gérer les liens suivants
-                if (!string.IsNullOrEmpty(suivantText))
+                catch (Exception ex)
                 {
-                    int idSuivant;
-                    if (int.TryParse(suivantText.Replace("=A", "").Replace("+1", ""), out idSuivant))
-                    {
-                        if (noeuds.ContainsKey(idSuivant))
-                        {
-                            arcs.Add(Tuple.Create(noeuds[idStation], noeuds[idSuivant], temps));
-                        }
-                    }
+                    Console.WriteLine($"Erreur lors du chargement d'un arc: {ex.Message}");
                 }
             }
         }
-
-        return arcs;
+        return arcs.ToList();
     }
 
-   
-   /// <summary>
-   /// Affiche et sauvegarde le graphe sous forme d'image PNG à l'aide de SkiaSharp
-   /// </summary>
-   /// <param name="graphe"></param>
-   /// <param name="nomFichier"></param>
-    static void AfficherGraphe(Graphe<string> graphe, string nomFichier)
+    class ArcEqualityComparer : IEqualityComparer<Tuple<Noeud<string>, Noeud<string>, double>>
     {
-        const int width = 2000;
-        const int height = 2000;
-        const int marge = 50;
-
-        // calcul des bornes du graphe
-        double minLon = graphe.Noeuds.Min(n => n.Longitude);
-        double maxLon = graphe.Noeuds.Max(n => n.Longitude);
-        double minLat = graphe.Noeuds.Min(n => n.Latitude);
-        double maxLat = graphe.Noeuds.Max(n => n.Latitude);
-
-        // création de la surface de dessin
-        using (var surface = SKSurface.Create(new SKImageInfo(width, height)))
+        public bool Equals(Tuple<Noeud<string>, Noeud<string>, double> x, Tuple<Noeud<string>, Noeud<string>, double> y)
         {
-            var canvas = surface.Canvas;
-            canvas.Clear(SKColors.White);
-
-            // configuration des styles
-            var paintLien = new SKPaint
-            {
-                Color = SKColors.Gray.WithAlpha(128),
-                StrokeWidth = 3,
-                IsAntialias = true,
-                Style = SKPaintStyle.Stroke
-            };
-
-            var paintNoeud = new SKPaint
-            {
-                Color = SKColors.Red,
-                IsAntialias = true,
-                Style = SKPaintStyle.Fill
-            };
-
-            var paintTexte = new SKPaint
-            {
-                Color = SKColors.Black,
-                IsAntialias = true,
-                TextSize = 24,
-                TextAlign = SKTextAlign.Center
-            };
-
-            // dessin des liens
-            foreach (var lien in graphe.Liens)
-            {
-                float x1 = marge + (float)((lien.Source.Longitude - minLon) / (maxLon - minLon) * (width - 2 * marge));
-                float y1 = marge + (float)((maxLat - lien.Source.Latitude) / (maxLat - minLat) * (height - 2 * marge));
-                float x2 = marge + (float)((lien.Destination.Longitude - minLon) / (maxLon - minLon) * (width - 2 * marge));
-                float y2 = marge + (float)((maxLat - lien.Destination.Latitude) / (maxLat - minLat) * (height - 2 * marge));
-
-                canvas.DrawLine(x1, y1, x2, y2, paintLien);
-            }
-
-            // dessin des noeuds
-            foreach (var noeud in graphe.Noeuds)
-            {
-                float x = marge + (float)((noeud.Longitude - minLon) / (maxLon - minLon) * (width - 2 * marge));
-                float y = marge + (float)((maxLat - noeud.Latitude) / (maxLat - minLat) * (height - 2 * marge));
-
-                // dessin du cercle
-                canvas.DrawCircle(x, y, 8, paintNoeud);
-
-                // dessin du texte (libellé)
-                canvas.DrawText(noeud.Libelle, x, y - 15, paintTexte);
-            }
-
-            // sauvegarde de l'image
-            using (var image = surface.Snapshot())
-            using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
-            using (var stream = File.OpenWrite(nomFichier))
-            {
-                data.SaveTo(stream);
-            }
+            return x.Item1.Id == y.Item1.Id && x.Item2.Id == y.Item2.Id;
         }
 
-        Console.WriteLine($"Carte du métro sauvegardée dans {nomFichier}");
+        public int GetHashCode(Tuple<Noeud<string>, Noeud<string>, double> obj)
+        {
+            return obj.Item1.Id.GetHashCode() ^ obj.Item2.Id.GetHashCode();
+        }
     }
 
-  
+
+// Nouvelle classe pour éviter les doublons
+
+static int ParseId(string text)
+{
+    if (text.StartsWith("=A") || text.StartsWith("=D") || text.StartsWith("=C"))
+        return int.Parse(text.Substring(3).Replace("+1", ""));
+    return int.Parse(text);
+}
 }
