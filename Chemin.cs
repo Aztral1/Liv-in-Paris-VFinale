@@ -78,17 +78,17 @@ public static class Dijkstra<T>
 
         for (int i = 0; i < graphe.Noeuds.Count - 1; i++)
         {
-            bool updated = false;
+            bool modifie = false;
             foreach (var lien in graphe.Liens)
             {
                 if (distances[lien.Source] != double.MaxValue &&
                     distances[lien.Source] + lien.Poids < distances[lien.Destination])
                 {
                     distances[lien.Destination] = distances[lien.Source] + lien.Poids;
-                    updated = true;
+                    modifie = true;
                 }
             }
-            if (!updated) break; // Optimisation
+            if (!modifie) break; // Optimisation
         }
 
         return distances;
