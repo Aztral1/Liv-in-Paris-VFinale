@@ -73,8 +73,8 @@ public static class Dijkstra<T>
     public static Dictionary<Noeud<T>, double> BellmanFord(Graphe<T> graphe, Noeud<T> source)
     {
         var distances = new Dictionary<Noeud<T>, double>();
-        foreach (var node in graphe.Noeuds)
-            distances[node] = (node == source) ? 0 : double.MaxValue;
+        foreach (var noeud in graphe.Noeuds)
+            distances[noeud] = (noeud == source) ? 0 : double.MaxValue;
 
         for (int i = 0; i < graphe.Noeuds.Count - 1; i++)
         {
