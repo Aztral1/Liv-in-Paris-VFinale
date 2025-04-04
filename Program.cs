@@ -766,7 +766,7 @@ class Program
         return arcs;
     }
 
-    // La méthode AfficherGraphe reste identique à votre version originale
+   
     static void AfficherGraphe(Graphe<string> graphe, string nomFichier)
     {
         const int width = 2000;
@@ -845,18 +845,5 @@ class Program
         Console.WriteLine($"Carte du métro sauvegardée dans {nomFichier}");
     }
 
-    static double DegresToRadians(double deg) => deg * (Math.PI / 180);
-    static double CalculerDistanceHaversine(double lat1, double lon1, double lat2, double lon2)
-    {
-        const double R = 6371; // Rayon terrestre en km
-        var dLat = DegresToRadians(lat2 - lat1);
-        var dLon = DegresToRadians(lon2 - lon1);
-
-        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-                Math.Cos(DegresToRadians(lat1)) * Math.Cos(DegresToRadians(lat2)) *
-                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
-
-        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
-        return R * c;
-    }
+  
 }
