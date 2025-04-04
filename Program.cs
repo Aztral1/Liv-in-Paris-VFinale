@@ -10,15 +10,21 @@ using MySql.Data.MySqlClient;
 
 
 
-
+/// <summary>
+/// Classe principale du programme
+/// </summary>
 class Program
 {
+    /// <summary>
+    /// chaîne de connexion à la base de données MySQL locale
+    /// </summary>
     static string connectionString = "server=localhost;database=premierRenduPSI;user=root;password=Xiang92310;";
 
     static void Main(string[] args)
     {
         while (true)
         {
+            // affiche le menu principal
             Console.WriteLine("\n*** Liv'in Paris metro ***");
             Console.WriteLine("1) Connexion");
             Console.WriteLine("2) Création compte");
@@ -26,6 +32,7 @@ class Program
             Console.Write("Choisissez une option : ");
             string choix = Console.ReadLine();
 
+            // gère le choix de l'utilisateur
             switch (choix)
             {
                 case "1":
@@ -45,44 +52,54 @@ class Program
             }
         }
     }
+
+    /// <summary>
+    /// permet à un utilisateur de se connecter (client ou cuisinier)
+    /// </summary>
     static void Connexion()
     {
         while (true)
         {
+            // demande des identifiants
             Console.Write("\nEmail : ");
             string email = Console.ReadLine();
             Console.Write("Mot de passe : ");
             string mdp = Console.ReadLine();
 
+            // connexion à la base
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 connection.Open();
+                // vérifie les identifiants dans les deux tables
                 string requeteSql = @"SELECT 'Client' AS Role, idClient AS idUtilisateur, nom, prenom  FROM Client WHERE email = @Email AND motDePasse = @mdp
                                   UNION
                                   SELECT 'Cuisinier', idCuisinier AS idUtilisateur, nom, prenom FROM Cuisinier WHERE email = @Email AND motDePasse = @mdp"; 
 
                 MySqlCommand commandesql = new MySqlCommand(requeteSql, connection); 
-                commandesql.Parameters.AddWithValue("@Email", email);
+                commandesql.Parameters.AddWithValue("@Email", email); // paramètre sécurisé
                 commandesql.Parameters.AddWithValue("@mdp", mdp); 
 
                 using (MySqlDataReader lecteur = commandesql.ExecuteReader())
                 {
-                    if (lecteur.Read())
+                    if (lecteur.Read()) // si un utilisateur est trouvé
                     {
                         string role = lecteur["Role"].ToString();
                         int idUtilisateur = Convert.ToInt32(lecteur["idUtilisateur"]);
                         string prenom = lecteur["prenom"].ToString();
                         string nom = lecteur["nom"].ToString();
 
+                        // message de bienvenue
                         Console.WriteLine($"\nBienvenue, {prenom} {nom} ({role}) !");
                         lecteur.Close();
 
+
+                        // redirige vers le bon menu
                         if (role == "Client")
                             MenuClient(idUtilisateur);
                         else
                             MenuCuisinier(idUtilisateur);
 
-                        return;
+                        return; // sortie de la méthode après connexion
                     }
                     else
                     {
@@ -92,12 +109,16 @@ class Program
             }
         }
     }
-
+    
+    /// <summary>
+    /// permet à un utilisateur de créer un compte client ou cuisinier
+    /// </summary>
     static void CreerCompte()
     {
         Console.Write("\nVous êtes : 1) Client  2) Cuisinier\nChoix : ");
         string role = Console.ReadLine();
-
+        
+        // saisie des infos personnelles
         Console.Write("Nom : ");
         string nom = Console.ReadLine();
         Console.Write("Prénom : ");
@@ -118,7 +139,7 @@ class Program
         string ville = Console.ReadLine();
         Console.Write("Le métro le plus proche de chez vous: ");
         string metroProche = Console.ReadLine();
-        int totalCommande = 0;
+        int totalCommande = 0; // initialisation à 0 pour un nouvel utilisateur
 
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
@@ -139,6 +160,7 @@ class Program
                 return;
             }
 
+            // preparation de la requete SQL
             MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
             commandesql.Parameters.AddWithValue("@Nom", nom);
             commandesql.Parameters.AddWithValue("@Prenom", prenom);
@@ -153,6 +175,7 @@ class Program
             commandesql.Parameters.AddWithValue("@metroProche", metroProche);
 
 
+            // execution de la requete
             int ligneaff = commandesql.ExecuteNonQuery();
             if (ligneaff > 0)
             {
@@ -166,6 +189,11 @@ class Program
 
         }
     }
+
+    /// <summary>
+    /// menu affiché pour les utilisateurs clients connectés
+    /// </summary>
+    /// <param name="idClient"></param>
     static void MenuClient(int idClient)
     {
         List<string> platsCommandes = new List<string>(); // Stocker les noms des plats commandés
@@ -173,6 +201,7 @@ class Program
 
         while (true)
         {
+            // affiche le menu aux clients
             Console.WriteLine("\n*** Menu Client ***");
             Console.WriteLine("1) Ajouter un plat à la commande");
             Console.WriteLine("2) Voir les cuisiniers disponibles");
@@ -184,28 +213,34 @@ class Program
             switch (choix)
             {
                 case "1":
-                    totalPrix += AjouterPlatCommande(platsCommandes);
+                    totalPrix += AjouterPlatCommande(platsCommandes); // ajoute un plat à la commande
                     break;
                 case "2":
-                    VoirCuisiniers();
+                    VoirCuisiniers(); // affiche les cuisiniers dispos
                     break;
                 case "3":
-                    ReglerCommandes(idClient, platsCommandes, totalPrix);
+                    ReglerCommandes(idClient, platsCommandes, totalPrix); // procède au paiement 
                     platsCommandes.Clear(); // Réinitialiser après paiement
                     totalPrix = 0;
                     break;
                 case "4":
-                    return;
+                    return;  // deconnexion
                 default:
                     Console.WriteLine("Option invalide, veuillez réessayer.");
                     break;
             }
         }
     }
+
+    /// <summary>
+    /// menu affiché pour les utilisateurs cuisiniers connectés
+    /// </summary>
+    /// <param name="idCuisinier"></param>
     static void MenuCuisinier(int idCuisinier)
     {
         while (true)
         {
+            // affiche le menu
             Console.WriteLine("\n*** Menu Cuisinier ***");
             Console.WriteLine("1) Modifier mon menu");
             Console.WriteLine("2) Voir mes plats");
@@ -220,33 +255,39 @@ class Program
             switch (choix)
             {
                 case "1":
-                    ModifierMenu(idCuisinier);  
+                    ModifierMenu(idCuisinier);  // lancer la modif du menu
                     break;
                 case "2":
-                    VoirPlats(idCuisinier);  
+                    VoirPlats(idCuisinier);   // afficher les plats
                     break;
                 case "3":
-                    VoirClients(idCuisinier);
+                    VoirClients(idCuisinier); // voir liste des clients
                     break;
                 case "4":
-                    VoirCommandesAPreparer(idCuisinier);
+                    VoirCommandesAPreparer(idCuisinier); // voir commandes en attente
                     break;
                 case "5":
-                    Mettreàjourcommande();
+                    Mettreàjourcommande(); // mise à jour du statut d'une commande
                     break;
                 case "6":
-                    VoirCommandesRealisee(idCuisinier);
+                    VoirCommandesRealisee(idCuisinier); // voir commandes terminées
                     break;
                 case "7":
-                    return;
+                    return; // deconnexion
                 default:
                     Console.WriteLine("Option invalide, veuillez réessayer.");
                     break;
             }
         }
     }
+
+    /// <summary>
+    /// permet au cuisinier d'ajouter un plat à son menu
+    /// </summary>
+    /// <param name="idCuisinier"></param>
     static void ModifierMenu(int idCuisinier)
     {
+        // saisie des infos du plat
         Console.Write("\nNom du plat : ");
         string nomPlat = Console.ReadLine();
         Console.Write("Régime alimentaire : ");
@@ -277,7 +318,7 @@ class Program
             commandesql.Parameters.AddWithValue("@datePeremption", datePeremption);
             commandesql.Parameters.AddWithValue("@idCuisinier", idCuisinier);
 
-            int ligneaff = commandesql.ExecuteNonQuery();
+            int ligneaff = commandesql.ExecuteNonQuery(); // exécution
             if (ligneaff > 0)
             {
                 Console.WriteLine("Plat ajouté !");
@@ -296,6 +337,11 @@ class Program
             connection.Close();
         }
     }
+
+    /// <summary>
+    /// affiche tous les plats d'un cuisinier donné
+    /// </summary>
+    /// <param name="idCuisinier"></param>
     static void VoirPlats(int idCuisinier)
     {
         using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -318,6 +364,7 @@ class Program
                     Console.WriteLine("\n--- Liste des plats ---");
                     while (lecteur.Read())
                     {
+                        // lecture des informations
                         string nomPlat = lecteur["nomPlat"].ToString();
                         string regime = lecteur["regime"].ToString();
                         double prix = Convert.ToDouble(lecteur["prix"]);
@@ -346,12 +393,17 @@ class Program
         }
     }
 
+
+    /// <summary>
+    /// Affiche les cuisiniers dipsos et leurs plats
+    /// </summary>
     static void VoirCuisiniers()
     {
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             connection.Open();
 
+            // jointure entre cuisinier et plat
             string requetesql = @"SELECT Cuisinier.nom AS nomCuisinier, Plat.idPlat, Plat.nomPlat, Plat.regime, Plat.prix FROM Cuisinier JOIN Plat ON Plat.idCuisinier = Cuisinier.idCuisinier";// AS pour éviter les confusions
 
             MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
@@ -360,14 +412,17 @@ class Program
             Console.WriteLine("\n*** Cuisiniers Disponibles ***");
             while (lecteur.Read())
             {
+                // lecture des données
                 int idPlat = Convert.ToInt32(lecteur["idPlat"]);
                 string nomCuisinier = lecteur["nomCuisinier"].ToString();
                 string nomPlat = lecteur["nomPlat"].ToString();
                 string regime = lecteur["regime"].ToString();
                 double prix = Convert.ToDouble(lecteur["prix"]);
 
+                // affichage 
                 Console.WriteLine($"\nNom: {nomCuisinier}, Plat: {nomPlat}, Régime: {regime}, Prix: {prix} euro");
 
+                // ingrédients du plat
                 List<string> ingredients = RecupererIngredients(idPlat);
                 if (ingredients.Count > 0)
                     Console.WriteLine($"Ingrédients : {string.Join(", ", ingredients)}");
@@ -377,6 +432,11 @@ class Program
         }
     }
 
+    /// <summary>
+    /// retourne la liste des ingrédients associés à un plat
+    /// </summary>
+    /// <param name="idPlat"></param>
+    /// <returns></returns>
     static List<string> RecupererIngredients(int idPlat)
     {
         List<string> ingredients = new List<string>();
@@ -401,6 +461,10 @@ class Program
         return ingredients;
     }
 
+    /// <summary>
+    /// permet au cuisinier de voir les clients qui ont commandé ses plats
+    /// </summary>
+    /// <param name="idCuisinier"></param>
     static void VoirClients(int idCuisinier)
     {
         using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -430,6 +494,11 @@ class Program
         }
     }
 
+    /// <summary>
+    /// Ajoute un plat à la commande si le plat existe dans la base.
+    /// </summary>
+    /// <param name="platsCommandes"></param>
+    /// <returns></returns>
     static double AjouterPlatCommande(List<string> platsCommandes)
     {
         Console.Write("\nEntrez le nom du plat que vous souhaitez commander : ");
@@ -439,7 +508,7 @@ class Program
         {
             connection.Open();
 
-            // Vérifier si le plat existe
+            // Vérifier si le plat existe dans la base 
             string requetesql = "SELECT prix FROM Plat WHERE nomPlat = @nomPlat";
             MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
             commandesql.Parameters.AddWithValue("@nomPlat", nomPlat);
@@ -460,6 +529,13 @@ class Program
             }
         }
     }
+
+    /// <summary>
+    /// Finalise la commande d’un client en l’enregistrant dans la base de données
+    /// </summary>
+    /// <param name="idClient"></param>
+    /// <param name="platsCommandes"></param>
+    /// <param name="totalPrix"></param>
     static void ReglerCommandes(int idClient, List<string> platsCommandes, double totalPrix)
     {
         if (platsCommandes.Count == 0)
@@ -468,12 +544,14 @@ class Program
             return;
         }
 
-        string nomPlat = platsCommandes[0]; 
+        string nomPlat = platsCommandes[0];  // on prend juste le premier plat
 
+        // affichage du récapitulatif
         Console.WriteLine("\n*** Récapitulatif de la commande ***");
         Console.WriteLine($"Plat : {nomPlat}");
         Console.WriteLine($"Total à payer : {totalPrix} euro");
 
+        // demande d'un commentaire facultatif
         Console.Write("\nSouhaitez-vous ajouter un commentaire pour le cuisinier ? (oui/non) : ");
         string reponse = Console.ReadLine().ToLower();
         string commentaire = "";
@@ -501,7 +579,7 @@ class Program
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             connection.Open();
-
+            // récupère l’ID du cuisinier responsable du plat
             string requetecuisinier = "SELECT idCuisinier FROM Plat WHERE nomPlat = @nomPlat";
             MySqlCommand commandecuisinier = new MySqlCommand(requetecuisinier, connection);
             commandecuisinier.Parameters.AddWithValue("@nomPlat", nomPlat);
@@ -516,6 +594,7 @@ class Program
 
             int idCuisinier = Convert.ToInt32(resultat);
 
+            // insertion dans la table Commande
             string requetesql = @"INSERT INTO Commande (nom, prix, tempsPreparation, statut, date, idClient, commentaire, idCuisinier)
                                VALUES (@nom, @prix, @tempsPreparation, @statut, @date, @idClient, @commentaire, @idCuisinier)";
 
@@ -536,6 +615,12 @@ class Program
         }
     }
 
+
+    /// <summary>
+    /// permet d’ajouter des ingrédients à un plat
+    /// </summary>
+    /// <param name="idPlat"></param>
+    /// <param name="connection"></param>
     static void AjouterIngredients(long idPlat, MySqlConnection connection)
     {
         while (true)
@@ -549,7 +634,7 @@ class Program
             Console.Write("Origine : ");
             string origine = Console.ReadLine();
           
-
+            // insertion de l’ingrédient
             string requetesql = "INSERT INTO ingredient (nom,  origine, idPlat) " +
                            "VALUES (@nom, @origine, @idPlat)";
 
@@ -563,6 +648,10 @@ class Program
         }
     }
 
+    /// <summary>
+    /// Affiche les commandes en attente assignées à un cuisinier
+    /// </summary>
+    /// <param name="idCuisinier"></param>
     static void VoirCommandesAPreparer(int idCuisinier)
     {
         using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -593,7 +682,11 @@ class Program
             connection.Close();
         }
     }
-
+ 
+    /// <summary>
+    /// Affiche les commandes déjà réalisées par un cuisinier 
+    /// </summary>
+    /// <param name="idCuisinier"></param>
     static void VoirCommandesRealisee(int idCuisinier)
     {
         using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -624,6 +717,10 @@ class Program
             connection.Close();
         }
     }
+
+    /// <summary>
+    /// met à jour le statut d'une commande
+    /// </summary>
     static void Mettreàjourcommande()
     {
         using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -651,6 +748,9 @@ class Program
     }
 
 
+    /// <summary>
+    /// génère et affiche le graphe du métro parisien à partir du fichier Excel
+    /// </summary>
     static void résultatGraphe()
     {
         // Charger les données depuis Excel
@@ -675,6 +775,11 @@ class Program
 
     }
 
+    /// <summary>
+    /// Charge les noeuds (stations) 
+    /// </summary>
+    /// <param name="fichierExcel"></param>
+    /// <returns></returns>
     static Dictionary<int, Noeud<string>> ChargerNoeuds(string fichierExcel)
     {
         var noeuds = new Dictionary<int, Noeud<string>>();
@@ -701,6 +806,7 @@ class Program
                     string commune = reader[5].ToString();
                     string codeInsee = reader[6].ToString();
 
+                    // ajout du noeud dans le dictionnaire
                     noeuds.Add(id, new Noeud<string>(id, libelleStation, libelleLigne, longitude, latitude, commune, codeInsee));
                 }
                 catch (Exception ex)
@@ -712,6 +818,13 @@ class Program
         return noeuds;
     }
 
+
+    /// <summary>
+    /// Charge les arcs (liaisons) entre stations
+    /// </summary>
+    /// <param name="fichierExcel"></param>
+    /// <param name="noeuds"></param>
+    /// <returns></returns>
     static List<Tuple<Noeud<string>, Noeud<string>, double>> ChargerArcs(string fichierExcel, Dictionary<int, Noeud<string>> noeuds)
     {
         var arcs = new List<Tuple<Noeud<string>, Noeud<string>, double>>();
@@ -731,6 +844,7 @@ class Program
                 string suivantText = reader[3].ToString();
                 string tempsText = reader[4].ToString();
 
+                // on ignore si aucun temps n'est défini
                 if (string.IsNullOrEmpty(tempsText)) continue;
 
                 double temps = Convert.ToDouble(tempsText);
@@ -767,25 +881,30 @@ class Program
     }
 
    
+   /// <summary>
+   /// Affiche et sauvegarde le graphe sous forme d'image PNG à l'aide de SkiaSharp
+   /// </summary>
+   /// <param name="graphe"></param>
+   /// <param name="nomFichier"></param>
     static void AfficherGraphe(Graphe<string> graphe, string nomFichier)
     {
         const int width = 2000;
         const int height = 2000;
         const int marge = 50;
 
-        // 1. Calcul des bornes du graphe
+        // calcul des bornes du graphe
         double minLon = graphe.Noeuds.Min(n => n.Longitude);
         double maxLon = graphe.Noeuds.Max(n => n.Longitude);
         double minLat = graphe.Noeuds.Min(n => n.Latitude);
         double maxLat = graphe.Noeuds.Max(n => n.Latitude);
 
-        // 2. Création de la surface de dessin
+        // création de la surface de dessin
         using (var surface = SKSurface.Create(new SKImageInfo(width, height)))
         {
             var canvas = surface.Canvas;
             canvas.Clear(SKColors.White);
 
-            // 3. Configuration des styles
+            // configuration des styles
             var paintLien = new SKPaint
             {
                 Color = SKColors.Gray.WithAlpha(128),
@@ -809,7 +928,7 @@ class Program
                 TextAlign = SKTextAlign.Center
             };
 
-            // 4. Dessin des liens
+            // dessin des liens
             foreach (var lien in graphe.Liens)
             {
                 float x1 = marge + (float)((lien.Source.Longitude - minLon) / (maxLon - minLon) * (width - 2 * marge));
@@ -820,20 +939,20 @@ class Program
                 canvas.DrawLine(x1, y1, x2, y2, paintLien);
             }
 
-            // 5. Dessin des noeuds
+            // dessin des noeuds
             foreach (var noeud in graphe.Noeuds)
             {
                 float x = marge + (float)((noeud.Longitude - minLon) / (maxLon - minLon) * (width - 2 * marge));
                 float y = marge + (float)((maxLat - noeud.Latitude) / (maxLat - minLat) * (height - 2 * marge));
 
-                // Dessin du cercle
+                // dessin du cercle
                 canvas.DrawCircle(x, y, 8, paintNoeud);
 
-                // Dessin du texte (libellé)
+                // dessin du texte (libellé)
                 canvas.DrawText(noeud.Libelle, x, y - 15, paintTexte);
             }
 
-            // 6. Sauvegarde de l'image
+            // sauvegarde de l'image
             using (var image = surface.Snapshot())
             using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
             using (var stream = File.OpenWrite(nomFichier))
