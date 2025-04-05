@@ -60,7 +60,7 @@ public class Noeud<T>
     /// <param name="tempschangement"></param>
     public Noeud(int id, T libelle, string libelleLigne, double longitude, double latitude, string commune, string codeInsee, double tempschangement)
     {
-        Random r = new Random(); // permet de générer des données aléatoires
+        
         Id = id;
         Libelle = libelle;
         LibelleLigne = libelleLigne;
