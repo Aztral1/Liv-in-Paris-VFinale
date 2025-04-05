@@ -27,8 +27,8 @@
         /// <param name="poids"></param>
         public Lien(Noeud<T> source, Noeud<T> destination, double poids)
         {
-            Noeud1 = noeud1;
-            Noeud2 = noeud2;
+            Source = source;
+            Destination = destination;
             Poids = poids;
         }
     }
