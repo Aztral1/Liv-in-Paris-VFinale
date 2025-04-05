@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using SkiaSharp;
 using MySql.Data.MySqlClient;
+using System.Diagnostics;
 
 
 
@@ -45,105 +46,107 @@ class Program
                 case "3":
                     Console.WriteLine("Au revoir, à bientôt!");
                     return;
-                default:
-                    Console.WriteLine("Option invalide, veuillez réessayer :(");
-                            // Initialisation et chargement des données
-var graphe = new Graphe<string>();
-var noeuds = ChargerNoeuds("MetroParis(1).xlsx");
-var arcs = ChargerArcs("MetroParis(1).xlsx", noeuds);
-
-foreach (var noeud in noeuds.Values) graphe.AjouterNoeud(noeud);
-foreach (var arc in arcs) graphe.AjouterLien(arc.Item1, arc.Item2, arc.Item3);
-
-// Menu interactif
-while (true)
-{
-    Console.Clear();
-    Console.WriteLine("=== PLANIFICATEUR DE TRAJET MÉTRO PARISIEN ===");
-    Console.WriteLine("\n1. Rechercher un trajet");
-    Console.WriteLine("2. Quitter");
-    Console.Write("\nVotre choix : ");
-
-    string choix = Console.ReadLine();
-
-    if (choix == "2") break;
-
-    if (choix == "1")
-    {
-        Console.WriteLine("\nAlgorithmes disponibles :");
-        Console.WriteLine("1. Dijkstra (recommandé)");
-        Console.WriteLine("2. Bellman-Ford");
-        Console.WriteLine("3. Floyd-Marshall");
-        Console.Write("\nChoisissez un algorithme (1-3) : ");
-        string choixAlgo = Console.ReadLine();
-
-        List<Noeud<string>> chemin = null;
-        string algoUtilisé = "";
-        Console.WriteLine("De quelle station partez-vous ?");
-        var nomdépart = Console.ReadLine()?.Trim().ToUpper();
-        var départ = noeuds.Values.FirstOrDefault(n => n.Libelle.ToUpper().Contains(nomdépart));
-
-        if (départ == null)
-        {
-            Console.WriteLine($"Aucune station contenant '{nomdépart}' n'a été trouvée.");
-            continue; // ou return selon votre flux
-        }
-
-        Console.WriteLine("Vers quelle station allez-vous ?");
-        var nomarrivée = Console.ReadLine()?.Trim().ToUpper();
-        var arrivée = noeuds.Values.FirstOrDefault(n => n.Libelle.ToUpper().Contains(nomarrivée));
-
-        if (arrivée == null)
-        {
-            Console.WriteLine($"Aucune station contenant '{nomarrivée}' n'a été trouvée.");
-            continue; // ou return selon votre flux
-        }
-        switch (choixAlgo)
-        {
-            case "1":
-                chemin = Chemin<string>.Dijsktra(graphe, départ, arrivée);
-                algoUtilisé = "Dijkstra";
-                break;
-            case "2":
-                var distancesBF = Chemin<string>.BellmanFord(graphe, départ);
-                chemin = Chemin<string>.ReconstruireCheminBellmanFord(distancesBF, graphe, départ, arrivée);
-                algoUtilisé = "Bellman-Ford";
-                break;
-            case "3":
-
-                var (distancesFW, predecesseursFW) = Chemin<string>.FloydWarshall(graphe);
-                chemin = Chemin<string>.ReconstruireCheminFloydWarshall(predecesseursFW, départ, arrivée);
-                algoUtilisé = "Floyd-Warshall";
-                break;
-            default:
-                Console.WriteLine("Choix invalide, utilisation de Dijkstra par défaut.");
-                chemin = Chemin<string>.Dijsktra(graphe, départ, arrivée);
-                algoUtilisé = "Dijkstra";
-                break;
-        }
-
-        // Affichage des résultats
-        if (chemin.Count > 0)
-        {
-            Console.WriteLine($"\n CHEMIN TROUVÉ ({chemin.Count} stations) - Algorithme: {algoUtilisé}");
-            AfficherChemin(chemin);
-            graphe.AfficherGraphe("metro_paris_chemin.png", chemin);
-            Process.Start(new ProcessStartInfo { FileName = "metro_paris_chemin.png", UseShellExecute = true });
-        }
-        else
-        {
-            Console.WriteLine("\nAUCUN CHEMIN TROUVÉ");
-            Console.WriteLine($"Entre {départ.Libelle} et {arrivée.Libelle}");
-            Process.Start(new ProcessStartInfo { FileName = "metro_paris.png", UseShellExecute = true });
-        }
-
-        Console.WriteLine("\nAppuyez sur une touche pour continuer...");
-        Console.ReadKey();
-    }
-}
+                default:Console.WriteLine("Option invalide, veuillez réessayer :(");
                     break;
-                    case "4":
+                case "4":
                     
+                    // Initialisation et chargement des données
+                    var graphe = new Graphe<string>();
+                    var noeuds = ChargerNoeuds("MetroParis(1).xlsx");
+                    var arcs = ChargerArcs("MetroParis(1).xlsx", noeuds);
+
+                    foreach (var noeud in noeuds.Values) graphe.AjouterNoeud(noeud);
+                    foreach (var arc in arcs) graphe.AjouterLien(arc.Item1, arc.Item2, arc.Item3);
+
+                    // Menu interactif
+                    while (true)
+                    {
+                        Console.Clear();
+                        Console.WriteLine("=== PLANIFICATEUR DE TRAJET MÉTRO PARISIEN ===");
+                        Console.WriteLine("\n1. Rechercher un trajet");
+                        Console.WriteLine("2. Quitter");
+                        Console.Write("\nVotre choix : ");
+
+                        string choix2 = Console.ReadLine();
+
+                        if (choix2 == "2") break;
+
+                        if (choix2 == "1")
+                        {
+                            Console.WriteLine("\nAlgorithmes disponibles :");
+                            Console.WriteLine("1. Dijkstra (recommandé)");
+                            Console.WriteLine("2. Bellman-Ford");
+                            Console.WriteLine("3. Floyd-Marshall");
+                            Console.Write("\nChoisissez un algorithme (1-3) : ");
+                            string choixAlgo = Console.ReadLine();
+
+                            List<Noeud<string>> chemin = null;
+                            string algoUtilisé = "";
+                            Console.WriteLine("De quelle station partez-vous ?");
+                            var nomdépart = Console.ReadLine()?.Trim().ToUpper();
+                            var départ = noeuds.Values.FirstOrDefault(n => n.Libelle.ToUpper().Contains(nomdépart));
+
+                            if (départ == null)
+                            {
+                                Console.WriteLine($"Aucune station contenant '{nomdépart}' n'a été trouvée.");
+                                continue; // ou return selon votre flux
+                            }
+
+                            Console.WriteLine("Vers quelle station allez-vous ?");
+                            var nomarrivée = Console.ReadLine()?.Trim().ToUpper();
+                            var arrivée = noeuds.Values.FirstOrDefault(n => n.Libelle.ToUpper().Contains(nomarrivée));
+
+                            if (arrivée == null)
+                            {
+                                Console.WriteLine($"Aucune station contenant '{nomarrivée}' n'a été trouvée.");
+                                continue; // ou return selon votre flux
+                            }
+                            switch (choixAlgo)
+                            {
+                                case "1":
+                                    chemin = Chemin<string>.Dijsktra(graphe, départ, arrivée);
+                                    algoUtilisé = "Dijkstra";
+                                    break;
+                                case "2":
+                                    var distancesBF = Chemin<string>.BellmanFord(graphe, départ);
+                                    chemin = Chemin<string>.ReconstruireCheminBellmanFord(distancesBF, graphe, départ, arrivée);
+                                    algoUtilisé = "Bellman-Ford";
+                                    break;
+                                case "3":
+
+                                    var (distancesFW, predecesseursFW) = Chemin<string>.FloydWarshall(graphe);
+                                    chemin = Chemin<string>.ReconstruireCheminFloydWarshall(predecesseursFW, départ, arrivée);
+                                    algoUtilisé = "Floyd-Warshall";
+                                    break;
+                                default:
+                                    Console.WriteLine("Choix invalide, utilisation de Dijkstra par défaut.");
+                                    chemin = Chemin<string>.Dijsktra(graphe, départ, arrivée);
+                                    algoUtilisé = "Dijkstra";
+                                    break;
+                            }
+
+                            // Affichage des résultats
+                            if (chemin.Count > 0)
+                            {
+                                Console.WriteLine($"\n CHEMIN TROUVÉ ({chemin.Count} stations) - Algorithme: {algoUtilisé}");
+                                AfficherChemin(chemin);
+                                graphe.AfficherGraphe("metro_paris_chemin.png", chemin);
+                                Process.Start(new ProcessStartInfo { FileName = "metro_paris_chemin.png", UseShellExecute = true });
+                            }
+                            else
+                            {
+                                Console.WriteLine("\nAUCUN CHEMIN TROUVÉ");
+                                Console.WriteLine($"Entre {départ.Libelle} et {arrivée.Libelle}");
+                                Process.Start(new ProcessStartInfo { FileName = "metro_paris.png", UseShellExecute = true });
+                            }
+
+                            Console.WriteLine("\nAppuyez sur une touche pour continuer...");
+                            Console.ReadKey();
+                        }
+                    }
+                    break;
+                
+
             }
         }
     }
@@ -168,11 +171,11 @@ while (true)
                 // vérifie les identifiants dans les deux tables
                 string requeteSql = @"SELECT 'Client' AS Role, idClient AS idUtilisateur, nom, prenom  FROM Client WHERE email = @Email AND motDePasse = @mdp
                                   UNION
-                                  SELECT 'Cuisinier', idCuisinier AS idUtilisateur, nom, prenom FROM Cuisinier WHERE email = @Email AND motDePasse = @mdp"; 
+                                  SELECT 'Cuisinier', idCuisinier AS idUtilisateur, nom, prenom FROM Cuisinier WHERE email = @Email AND motDePasse = @mdp";
 
-                MySqlCommand commandesql = new MySqlCommand(requeteSql, connection); 
+                MySqlCommand commandesql = new MySqlCommand(requeteSql, connection);
                 commandesql.Parameters.AddWithValue("@Email", email); // paramètre sécurisé
-                commandesql.Parameters.AddWithValue("@mdp", mdp); 
+                commandesql.Parameters.AddWithValue("@mdp", mdp);
 
                 using (MySqlDataReader lecteur = commandesql.ExecuteReader())
                 {
@@ -204,7 +207,7 @@ while (true)
             }
         }
     }
-    
+
     /// <summary>
     /// permet à un utilisateur de créer un compte client ou cuisinier
     /// </summary>
@@ -212,7 +215,7 @@ while (true)
     {
         Console.Write("\nVous êtes : 1) Client  2) Cuisinier\nChoix : ");
         string role = Console.ReadLine();
-        
+
         // saisie des infos personnelles
         Console.Write("Nom : ");
         string nom = Console.ReadLine();
@@ -641,75 +644,121 @@ while (true)
 
         string nomPlat = platsCommandes[0];  // on prend juste le premier plat
 
-        // affichage du récapitulatif
-        Console.WriteLine("\n*** Récapitulatif de la commande ***");
-        Console.WriteLine($"Plat : {nomPlat}");
-        Console.WriteLine($"Total à payer : {totalPrix} euro");
-
-        // demande d'un commentaire facultatif
-        Console.Write("\nSouhaitez-vous ajouter un commentaire pour le cuisinier ? (oui/non) : ");
-        string reponse = Console.ReadLine().ToLower();
-        string commentaire = "";
-
-        if (reponse == "oui")
-        {
-            Console.Write("Écrivez votre commentaire (max 250 caractères) : ");
-            commentaire = Console.ReadLine();
-            if (commentaire.Length > 250)
-            {
-                commentaire = commentaire.Substring(0, 250);
-                Console.WriteLine("Commentaire trop long, il a été tronqué.");
-            }
-        }
-
-        Console.Write("\nConfirmez-vous le paiement ? (oui/non) : ");
-        string confirmation = Console.ReadLine().ToLower();
-
-        if (confirmation != "oui")
-        {
-            Console.WriteLine("Paiement annulé.");
-            return;
-        }
-
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             connection.Open();
-            // récupère l’ID du cuisinier responsable du plat
-            string requetecuisinier = "SELECT idCuisinier FROM Plat WHERE nomPlat = @nomPlat";
-            MySqlCommand commandecuisinier = new MySqlCommand(requetecuisinier, connection);
-            commandecuisinier.Parameters.AddWithValue("@nomPlat", nomPlat);
 
-            object resultat = commandecuisinier.ExecuteScalar();
+            // Récupérer les infos du client
+            string requeteClient = "SELECT metroProche FROM Client WHERE idClient = @idClient";
+            MySqlCommand commandeClient = new MySqlCommand(requeteClient, connection);
+            commandeClient.Parameters.AddWithValue("@idClient", idClient);
+            string metroClient = commandeClient.ExecuteScalar()?.ToString();
 
-            if (resultat == null)
+            // Récupérer l'ID du cuisinier et son métro proche
+            string requeteCuisinier = "SELECT idCuisinier FROM Plat WHERE nomPlat = @nomPlat";
+            MySqlCommand commandeCuisinier = new MySqlCommand(requeteCuisinier, connection);
+            commandeCuisinier.Parameters.AddWithValue("@nomPlat", nomPlat);
+            int idCuisinier = Convert.ToInt32(commandeCuisinier.ExecuteScalar());
+
+            string requeteMetroCuisinier = "SELECT metroProche FROM Cuisinier WHERE idCuisinier = @idCuisinier";
+            MySqlCommand commandeMetroCuisinier = new MySqlCommand(requeteMetroCuisinier, connection);
+            commandeMetroCuisinier.Parameters.AddWithValue("@idCuisinier", idCuisinier);
+            string metroCuisinier = commandeMetroCuisinier.ExecuteScalar()?.ToString();
+
+            // Charger le graphe pour calculer le trajet
+            var graphe = new Graphe<string>();
+            var noeuds = ChargerNoeuds("MetroParis(1).xlsx");
+            var arcs = ChargerArcs("MetroParis(1).xlsx", noeuds);
+
+            foreach (var noeud in noeuds.Values) graphe.AjouterNoeud(noeud);
+            foreach (var arc in arcs) graphe.AjouterLien(arc.Item1, arc.Item2, arc.Item3);
+
+            // Trouver les stations correspondantes
+            var depart = noeuds.Values.FirstOrDefault(n => n.Libelle.ToString().ToUpper().Contains(metroClient.ToUpper()));
+            var arrivee = noeuds.Values.FirstOrDefault(n => n.Libelle.ToString().ToUpper().Contains(metroCuisinier.ToUpper()));
+
+            double distance = 0;
+            double tempsTrajet = 0;
+
+            if (depart != null && arrivee != null)
             {
-                Console.WriteLine("Ce plat n'existe pas !");
+                var chemin = Chemin<string>.Dijsktra(graphe, depart, arrivee);
+                if (chemin.Count > 0)
+                {
+                    for (int i = 0; i < chemin.Count - 1; i++)
+                    {
+                        var current = chemin[i];
+                        var next = chemin[i + 1];
+                        var lien = current.Liens.FirstOrDefault(l => l.Destination == next)
+                                ?? next.Liens.First(l => l.Destination == current);
+
+                        distance += CalculerDistanceHaversine(
+                            current.Latitude, current.Longitude,
+                            next.Latitude, next.Longitude);
+
+                        tempsTrajet += lien.Poids;
+
+                        if (i < chemin.Count - 1 && !current.Lignes.Intersect(next.Lignes).Any())
+                        {
+                            tempsTrajet += current.TempsChangement;
+                        }
+                    }
+                }
+            }
+
+            // Afficher le récapitulatif
+            Console.WriteLine("\n*** Récapitulatif de la commande ***");
+            Console.WriteLine($"Plat : {nomPlat}");
+            Console.WriteLine($"Total à payer : {totalPrix} euro");
+            Console.WriteLine($"Distance entre vous et le cuisinier : {distance:0.00} km");
+            Console.WriteLine($"Temps estimé de livraison : {tempsTrajet} minutes");
+
+            // Ajouter les étapes manquantes
+
+            Console.Write("\nSouhaitez-vous ajouter un commentaire pour le cuisinier ? (oui/non) : ");
+            string reponse = Console.ReadLine().ToLower();
+            string commentaire = "";
+
+            if (reponse == "oui")
+            {
+                Console.Write("Écrivez votre commentaire (max 250 caractères) : ");
+                commentaire = Console.ReadLine();
+                if (commentaire.Length > 250)
+                {
+                    commentaire = commentaire.Substring(0, 250);
+                    Console.WriteLine("Commentaire trop long, il a été tronqué.");
+                }
+            }
+
+            Console.Write("\nConfirmez-vous le paiement ? (oui/non) : ");
+            string confirmation = Console.ReadLine().ToLower();
+
+            if (confirmation != "oui")
+            {
+                Console.WriteLine("Paiement annulé.");
                 return;
             }
 
-            int idCuisinier = Convert.ToInt32(resultat);
+            // Insertion dans la table commande
+            string requeteCommande = @"INSERT INTO Commande 
+            (nom, prix, tempsPreparation, statut, date, idClient, commentaire, idCuisinier) 
+            VALUES (@nom, @prix, @tempsPreparation, @statut, @date, @idClient, @commentaire, @idCuisinier)";
 
-            // insertion dans la table Commande
-            string requetesql = @"INSERT INTO Commande (nom, prix, tempsPreparation, statut, date, idClient, commentaire, idCuisinier)
-                               VALUES (@nom, @prix, @tempsPreparation, @statut, @date, @idClient, @commentaire, @idCuisinier)";
-
-            MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
-            commandesql.Parameters.AddWithValue("@nom", nomPlat);
-            commandesql.Parameters.AddWithValue("@prix", totalPrix);
-            commandesql.Parameters.AddWithValue("@tempsPreparation", 30); // temporaire
-            commandesql.Parameters.AddWithValue("@statut", "en attente");
-            commandesql.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd"));
-            commandesql.Parameters.AddWithValue("@idClient", idClient);
-            commandesql.Parameters.AddWithValue("@commentaire", commentaire);
-            commandesql.Parameters.AddWithValue("@idCuisinier", idCuisinier);
-
-            commandesql.ExecuteNonQuery();
+            MySqlCommand commande = new MySqlCommand(requeteCommande, connection);
+            commande.Parameters.AddWithValue("@nom", nomPlat);
+            commande.Parameters.AddWithValue("@prix", totalPrix);
+            commande.Parameters.AddWithValue("@tempsPreparation", 30); // Valeur par défaut
+            commande.Parameters.AddWithValue("@statut", "en attente");
+            commande.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd"));
+            commande.Parameters.AddWithValue("@idClient", idClient);
+            commande.Parameters.AddWithValue("@commentaire", commentaire);
+            commande.Parameters.AddWithValue("@idCuisinier", idCuisinier);
+            commande.ExecuteNonQuery();
 
             Console.WriteLine("\nPaiement effectué avec succès !");
-            Console.WriteLine("Merci pour votre commande !");
+            Console.WriteLine("Votre commande a été enregistrée.");
         }
     }
-
 
     /// <summary>
     /// permet d’ajouter des ingrédients à un plat
@@ -722,13 +771,13 @@ while (true)
         {
             Console.Write("\nNom de l'ingrédient (ou taper 'fin' pour arrêter) : ");
             string nomIngredient = Console.ReadLine();
-            if (nomIngredient.ToLower() == "fin") 
+            if (nomIngredient.ToLower() == "fin")
                 break;
 
-           
+
             Console.Write("Origine : ");
             string origine = Console.ReadLine();
-          
+
             // insertion de l’ingrédient
             string requetesql = "INSERT INTO ingredient (nom,  origine, idPlat) " +
                            "VALUES (@nom, @origine, @idPlat)";
@@ -753,10 +802,25 @@ while (true)
         {
             connection.Open();
 
-            string requetesql = "SELECT idCommande, nom, prix, statut, date, idClient, commentaire FROM commande WHERE (idCuisinier = @idCuisinier) and commande.statut='en attente'";
+            string requetesql = @"SELECT commande.idCommande, commande.nom, commande.prix, commande.statut, commande.date, commande.commentaire,
+       client.idClient, client.nom AS nomClient, client.prenom, client.metroProche AS metroClient,
+       cuisinier.metroProche AS metroCuisinier
+FROM commande
+JOIN client ON commande.idClient = client.idClient
+JOIN cuisinier ON commande.idCuisinier = cuisinier.idCuisinier
+WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
+";
 
             MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
             commandesql.Parameters.AddWithValue("@idCuisinier", idCuisinier);
+
+            // Charger le graphe une seule fois
+            var graphe = new Graphe<string>();
+            var noeuds = ChargerNoeuds("MetroParis(1).xlsx");
+            var arcs = ChargerArcs("MetroParis(1).xlsx", noeuds);
+
+            foreach (var noeud in noeuds.Values) graphe.AjouterNoeud(noeud);
+            foreach (var arc in arcs) graphe.AjouterLien(arc.Item1, arc.Item2, arc.Item3);
 
             using (MySqlDataReader lecteur = commandesql.ExecuteReader())
             {
@@ -769,15 +833,51 @@ while (true)
                 Console.WriteLine("\nCommandes à préparer :");
                 while (lecteur.Read())
                 {
-                    Console.WriteLine($"Commande #{lecteur["idCommande"]} - {lecteur["nom"]} - {lecteur["prix"]} euro");
-                    Console.WriteLine($"Client: {lecteur["idClient"]} | Statut: {lecteur["statut"]} | Date: {lecteur["date"]}"); // mettre le temps estimée et la distance
+                    string metroClient = lecteur["metroClient"].ToString();
+                    string metroCuisinier = lecteur["metroCuisinier"].ToString();
+
+                    var depart = noeuds.Values.FirstOrDefault(n => n.Libelle.ToString().ToUpper().Contains(metroCuisinier.ToUpper()));
+                    var arrivee = noeuds.Values.FirstOrDefault(n => n.Libelle.ToString().ToUpper().Contains(metroClient.ToUpper()));
+
+                    double distance = 0;
+                    double tempsTrajet = 0;
+
+                    if (depart != null && arrivee != null)
+                    {
+                        var chemin = Chemin<string>.Dijsktra(graphe, depart, arrivee);
+                        if (chemin.Count > 0)
+                        {
+                            for (int i = 0; i < chemin.Count - 1; i++)
+                            {
+                                var current = chemin[i];
+                                var next = chemin[i + 1];
+                                var lien = current.Liens.FirstOrDefault(l => l.Destination == next)
+                                         ?? next.Liens.First(l => l.Destination == current);
+
+                                distance += CalculerDistanceHaversine(
+                                    current.Latitude, current.Longitude,
+                                    next.Latitude, next.Longitude);
+
+                                tempsTrajet += lien.Poids;
+
+                                if (i < chemin.Count - 1 && !current.Lignes.Intersect(next.Lignes).Any())
+                                {
+                                    tempsTrajet += current.TempsChangement;
+                                }
+                            }
+                        }
+                    }
+
+                    Console.WriteLine($"\nCommande #{lecteur["idCommande"]} - {lecteur["nom"]} - {lecteur["prix"]} euro");
+                    Console.WriteLine($"Client: {lecteur["prenom"]} {lecteur["nomClient"]}");
+                    Console.WriteLine($"Distance: {distance:0.00} km | Temps estimé: {tempsTrajet} minutes");
+                    Console.WriteLine($"Statut: {lecteur["statut"]} | Date: {lecteur["date"]}");
                     Console.WriteLine($"Commentaire: {lecteur["commentaire"]}\n");
                 }
             }
-            connection.Close();
         }
     }
- 
+
     /// <summary>
     /// Affiche les commandes déjà réalisées par un cuisinier 
     /// </summary>
@@ -797,7 +897,7 @@ while (true)
             {
                 if (!lecteur.HasRows)
                 {
-                    Console.WriteLine("Aucune commande à préparer.");
+                    Console.WriteLine("Aucune commande réalisée.");
                     return;
                 }
 
@@ -805,7 +905,7 @@ while (true)
                 while (lecteur.Read())
                 {
                     Console.WriteLine($"Commande #{lecteur["idCommande"]} - {lecteur["nom"]} - {lecteur["prix"]} euro");
-                    Console.WriteLine($"Client: {lecteur["idClient"]} | Statut: {lecteur["statut"]} | Date: {lecteur["date"]}"); 
+                    Console.WriteLine($"Client: {lecteur["idClient"]} | Statut: {lecteur["statut"]} | Date: {lecteur["date"]}");
                     Console.WriteLine($"Commentaire: {lecteur["commentaire"]}\n");
                 }
             }
@@ -829,7 +929,7 @@ while (true)
             MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
             commandesql.Parameters.AddWithValue("@idCommande", idCommande);
             commandesql.Parameters.AddWithValue("@statut", nouveauStatut);
-          
+
             int ligneaff = commandesql.ExecuteNonQuery();
             if (ligneaff > 0)
             {
@@ -846,7 +946,80 @@ while (true)
     /// </summary>
     /// <param name="fichierExcel"></param>
     /// <returns></returns>
-        static Dictionary<int, Noeud<string>> ChargerNoeuds(string fichierExcel)
+    
+
+    static double DegresToRadians(double deg) => deg * (Math.PI / 180);
+    static double CalculerDistanceHaversine(double lat1, double lon1, double lat2, double lon2)
+    {
+        const double R = 6371; // Rayon terrestre en km
+        var dLat = DegresToRadians(lat2 - lat1);
+        var dLon = DegresToRadians(lon2 - lon1);
+
+        var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+                Math.Cos(DegresToRadians(lat1)) * Math.Cos(DegresToRadians(lat2)) *
+                Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
+
+        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+        return R * c;
+    }
+    static void AfficherChemin(List<Noeud<string>> chemin)
+    {
+        Console.WriteLine($"\n Chemin de {chemin.First().Libelle} à {chemin.Last().Libelle} :");
+        double tempsTotal = 0;
+        double tempsTrajet = 0;
+        double distanceTotale = 0;
+        int nbChangements = 0;
+        string ligneActuelle = chemin[0].Lignes.First();  // Prend la première ligne disponible
+
+        for (int i = 0; i < chemin.Count - 1; i++)
+        {
+            var current = chemin[i];
+            var next = chemin[i + 1];
+
+            var lien = current.Liens.FirstOrDefault(l => l.Destination == next)
+                     ?? next.Liens.First(l => l.Destination == current);
+
+            if (lien == null)
+            {
+                Console.WriteLine($"Erreur: Lien manquant entre {current.Libelle} et {next.Libelle}");
+                return;
+            }
+
+            double distanceSegment = CalculerDistanceHaversine(
+                current.Latitude, current.Longitude,
+                next.Latitude, next.Longitude);
+
+            distanceTotale += distanceSegment;
+
+            // Vérifie si les stations partagent une ligne commune
+            var lignesCommunes = current.Lignes.Intersect(next.Lignes).ToList();
+            if (lignesCommunes.Count == 0) // Changement de ligne
+            {
+                Console.WriteLine($"  {(i + 1).ToString().PadLeft(2)}. {current.Libelle} -> {next.Libelle} ({lien.Poids} min, {distanceSegment:0.00} km)");
+                Console.WriteLine($"     [CHANGEMENT: {ligneActuelle} -> {next.Lignes.First()} | +{current.TempsChangement} min]");
+                tempsTotal += lien.Poids + current.TempsChangement;
+                tempsTrajet += lien.Poids;
+                nbChangements++;
+                ligneActuelle = next.Lignes.First();
+            }
+            else // Même ligne
+            {
+                Console.WriteLine($"  {(i + 1).ToString().PadLeft(2)}. {current.Libelle} -> {next.Libelle} ({lien.Poids} min, {distanceSegment:0.00} km)");
+                tempsTotal += lien.Poids;
+                tempsTrajet += lien.Poids;
+            }
+        }
+
+        Console.WriteLine($"\n SYNTHÈSE DU TRAJET:");
+        Console.WriteLine($"• Temps de trajet: {tempsTrajet} minutes");
+        Console.WriteLine($"• Temps de changement: {tempsTotal - tempsTrajet} minutes");
+        Console.WriteLine($"• Temps total: {tempsTotal} minutes");
+        Console.WriteLine($"• Distance totale: {distanceTotale:0.00} km");
+        Console.WriteLine($"• Stations: {chemin.Count}");
+        Console.WriteLine($"• Changements: {nbChangements}");
+        Console.WriteLine("------------------------------------------------");
+    }
+    static Dictionary<int, Noeud<string>> ChargerNoeuds(string fichierExcel)
     {
         var noeuds = new Dictionary<int, Noeud<string>>();
         var stationsParNom = new Dictionary<string, List<Noeud<string>>>();
@@ -930,18 +1103,18 @@ while (true)
                     if (string.IsNullOrEmpty(tempsText)) continue;
                     double temps = Convert.ToDouble(tempsText);
 
-                    
+
                     // Gestion des liens précédents
                     if (!string.IsNullOrEmpty(reader[2].ToString()))
                     {
                         int idPrecedent = ParseId(reader[2].ToString());
 
-                        
-                            var precedent = noeuds[idPrecedent];
-                            var current = noeuds[idStation];
-                            arcs.Add(Tuple.Create(precedent, current, temps));
-                            arcs.Add(Tuple.Create(current, precedent, temps));
-                        
+
+                        var precedent = noeuds[idPrecedent];
+                        var current = noeuds[idStation];
+                        arcs.Add(Tuple.Create(precedent, current, temps));
+                        arcs.Add(Tuple.Create(current, precedent, temps));
+
                     }
 
                     // Gestion des liens suivants
@@ -949,11 +1122,11 @@ while (true)
                     {
                         int idSuivant = ParseId(reader[3].ToString());
 
-                            var current = noeuds[idStation];
-                            var suivant = noeuds[idSuivant];
-                            arcs.Add(Tuple.Create(current, suivant, temps));
-                            arcs.Add(Tuple.Create(suivant, current, temps));
-                        
+                        var current = noeuds[idStation];
+                        var suivant = noeuds[idSuivant];
+                        arcs.Add(Tuple.Create(current, suivant, temps));
+                        arcs.Add(Tuple.Create(suivant, current, temps));
+
                     }
                 }
                 catch (Exception ex)
@@ -964,6 +1137,8 @@ while (true)
         }
         return arcs.ToList();
     }
+
+    // Nouvelle classe pour éviter les doublons
 
     class ArcEqualityComparer : IEqualityComparer<Tuple<Noeud<string>, Noeud<string>, double>>
     {
@@ -978,13 +1153,12 @@ while (true)
         }
     }
 
+    // Nouvelle classe pour éviter les doublons
 
-// Nouvelle classe pour éviter les doublons
-
-static int ParseId(string text)
-{
-    if (text.StartsWith("=A") || text.StartsWith("=D") || text.StartsWith("=C"))
-        return int.Parse(text.Substring(3).Replace("+1", ""));
-    return int.Parse(text);
-}
+    static int ParseId(string text)
+    {
+        if (text.StartsWith("=A") || text.StartsWith("=D") || text.StartsWith("=C"))
+            return int.Parse(text.Substring(3).Replace("+1", ""));
+        return int.Parse(text);
+    }
 }
