@@ -16,6 +16,32 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `administrateur`
+--
+
+DROP TABLE IF EXISTS `administrateur`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `administrateur` (
+  `idAdmin` int NOT NULL AUTO_INCREMENT,
+  `nom` varchar(50) NOT NULL,
+  `prenom` varchar(50) NOT NULL,
+  `email` varchar(50) NOT NULL,
+  `motDePasse` varchar(255) NOT NULL,
+  PRIMARY KEY (`idAdmin`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `administrateur`
+--
+
+LOCK TABLES `administrateur` WRITE;
+/*!40000 ALTER TABLE `administrateur` DISABLE KEYS */;
+/*!40000 ALTER TABLE `administrateur` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `client`
 --
 
@@ -36,7 +62,7 @@ CREATE TABLE `client` (
   `metroProche` varchar(50) NOT NULL,
   `motDePasse` varchar(255) NOT NULL,
   PRIMARY KEY (`idClient`)
-) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -45,7 +71,7 @@ CREATE TABLE `client` (
 
 LOCK TABLES `client` WRITE;
 /*!40000 ALTER TABLE `client` DISABLE KEYS */;
-INSERT INTO `client` VALUES (18,'Martin','Jean','2 rue de la Fontaine',2,75015,'0787898789','Jean@gmail.com','Paris',0,'Argentine','Jean'),(19,'Négrié','Camille','Boulevard de Clichy',54,75900,'0651234595','camillenegrie@hotmail.com','Paris',0,'Place de Clichy','camille'),(20,'Moysan','Yann','rue des anges',4,75412,'0654859544','yann@gmail.com','Paris',0,'Pigalle','yann'),(21,'Bernard','Colin','rue de france',33,75000,'0654859655','colin@gmail.com','Paris',0,'Bercy','colin'),(22,'Michel','Boris','impasse des moineaux',22,75400,'0654859565','boris@gmail.com','Paris',0,'Tolbiac','boris'),(23,'samos','emile','rue des plantes',9,75601,'0654857495','emile@gmail.com','Paris',0,'Opéra','emile'),(24,'dupuis','marc','rue des pyrénées',45,75985,'0654859565','marc@gmail.com','Paris',0,'Cadet','marc');
+INSERT INTO `client` VALUES (18,'Martinn','Jean','2 rue de la Fontaine',2,75015,'0787898789','Jean@gmail.com','Paris',0,'Argentine','Jean'),(19,'Négrié','Camille','Boulevard de Clichy',54,75900,'0651234595','camillenegrie@hotmail.com','Paris',0,'Place de Clichy','camille'),(20,'Moysan','Yann','rue des anges',4,75412,'0654859544','yann@gmail.com','Paris',0,'Pigalle','yann'),(21,'Bernard','Colin','rue de france',33,75000,'0654859655','colin@gmail.com','Paris',0,'Bercy','colin'),(22,'Michel','Boris','impasse des moineaux',22,75400,'0654859565','boris@gmail.com','Paris',0,'Tolbiac','boris'),(23,'samos','emile','rue des plantes',9,75601,'0654857495','emile@gmail.com','Paris',0,'Opéra','emile'),(24,'dupuis','marc','rue des pyrénées',45,75985,'0654859565','marc@gmail.com','Paris',0,'Cadet','marc');
 /*!40000 ALTER TABLE `client` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -69,7 +95,7 @@ CREATE TABLE `commande` (
   PRIMARY KEY (`idCommande`),
   KEY `Commande_Client_FK` (`idClient`),
   CONSTRAINT `Commande_Client_FK` FOREIGN KEY (`idClient`) REFERENCES `client` (`idClient`)
-) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -78,7 +104,7 @@ CREATE TABLE `commande` (
 
 LOCK TABLES `commande` WRITE;
 /*!40000 ALTER TABLE `commande` DISABLE KEYS */;
-INSERT INTO `commande` VALUES (24,'couscous',15.00,30,'prêt','2025-04-09',18,'sans harissas ',15),(25,'couscous',15.00,30,'en attente','2025-04-09',19,'',15),(26,'makis thon',8.00,30,'en attente','2025-04-09',20,'',18),(27,'sushi saumon',8.00,30,'en attente','2025-04-09',20,'supplément sauce soja sucrée',18),(28,'burger',12.00,30,'en attente','2025-04-09',21,'sans oignons',16),(29,'pizza orientale',10.00,30,'en attente','2025-04-09',19,'',17),(30,'kebab',7.00,30,'en attente','2025-04-09',22,'sans tomates',19),(31,'pizza 4 fromages',10.00,30,'en attente','2025-04-09',23,'',17),(32,'makis thon',8.00,30,'en attente','2025-04-09',24,'',18);
+INSERT INTO `commande` VALUES (24,'couscous',15.00,30,'prêt','2025-04-09',18,'sans harissas ',15),(25,'couscous',15.00,30,'en attente','2025-04-09',19,'',15),(26,'makis thon',8.00,30,'en attente','2025-04-09',20,'',18),(27,'sushi saumon',8.00,30,'en attente','2025-04-09',20,'supplément sauce soja sucrée',18),(28,'burger',12.00,30,'en attente','2025-04-09',21,'sans oignons',16),(29,'pizza orientale',10.00,30,'en attente','2025-04-09',19,'',17),(30,'kebab',7.00,30,'en attente','2025-04-09',22,'sans tomates',19),(31,'pizza 4 fromages',10.00,30,'en attente','2025-04-09',23,'',17),(32,'makis thon',8.00,30,'en attente','2025-04-09',24,'',18),(33,'kebab',7.00,30,'préparé','2025-05-02',18,'sans oignons',19);
 /*!40000 ALTER TABLE `commande` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -112,7 +138,7 @@ CREATE TABLE `cuisinier` (
 
 LOCK TABLES `cuisinier` WRITE;
 /*!40000 ALTER TABLE `cuisinier` DISABLE KEYS */;
-INSERT INTO `cuisinier` VALUES (15,'Bernard','Christophe','rue de la place',75018,'0678984858','christophe@gmail.com','Paris',0,'Oberkampf','christophe',1),(16,'Jean','Jacques','Rue de Rivoli',75000,'0632954645','jacques@gmail.com','Paris',0,'Auber','jacques',36),(17,'Joly','Sandrine','rue des Tilleuls',75120,'0654859665','sandrine@gmail.com','Paris',0,'Châtelet','sandrine',22),(18,'Demousse','Jules','rue des prés*',75620,'0654857496','jules@gmail.com','Paris',0,'nation','jules',2),(19,'Maurice','Jeanne','rue des rosiers',75148,'0654859545','jeanne@gmail.com','Paris',0,'Trocadéro','jeanne',45);
+INSERT INTO `cuisinier` VALUES (15,'Bernard','Christophe','rue de la place',75018,'0678984858','christophe@gmail.com','Paris',0,'Oberkampf','christophe',1),(16,'Jean','Jacques','Rue de Rivoli',75000,'0632954645','jacques@gmail.com','Paris',0,'Auber','jacques',36),(17,'Jolie','Sandrine','rue des Tilleuls',75120,'0654859665','sandrine@gmail.com','Paris',0,'Châtelet','sandrine',22),(18,'Demousse','Jules','rue des prés*',75620,'0654857496','jules@gmail.com','Paris',0,'nation','jules',2),(19,'Maurice','Jeanne','rue des rosiers',75148,'0654859545','jeanne@gmail.com','Paris',0,'Trocadéro','jeanne',45);
 /*!40000 ALTER TABLE `cuisinier` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -181,4 +207,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-09 12:13:27
+-- Dump completed on 2025-05-05 16:46:10
