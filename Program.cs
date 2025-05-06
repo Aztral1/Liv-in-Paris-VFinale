@@ -1,5 +1,3 @@
-
-
 using System;
 using System.Collections.Generic;
 using System.Data.OleDb;
@@ -8,6 +6,7 @@ using System.Linq;
 using SkiaSharp;
 using MySql.Data.MySqlClient;
 using System.Diagnostics;
+using psi_rendu;
 
 
 
@@ -19,25 +18,23 @@ class Program
     /// <summary>
     /// chaîne de connexion à la base de données MySQL locale
     /// </summary>
-    static string connectionString = "server=localhost;database=premierRenduPSI;user=root;password = Yannou01!;";
-    
+    public static string connectionString = "server=localhost;database=premierRenduPSI;user=root;password=Xiang92310;";
+
     static void Main(string[] args)
     {
-        
         while (true)
         {
-            
-            // affiche le menu principal
-            Console.WriteLine("\n*** Liv'in Paris metro ***");
-            Console.WriteLine("1) Connexion");
-            Console.WriteLine("2) Création compte");
-            Console.WriteLine("3) Quitter");
+            Console.WriteLine("\n--- Bienvenue ---");
+            Console.WriteLine("1. Connexion");
+            Console.WriteLine("2. Créer un compte");
+            Console.WriteLine("3. Quitter");
             Console.WriteLine("4) Test chemin, dessin chemin, distance et temps");
             Console.WriteLine("5) Welsh Powell");
+
+
             Console.Write("Choisissez une option : ");
             string choix = Console.ReadLine();
 
-            // gère le choix de l'utilisateur
             switch (choix)
             {
                 case "1":
@@ -47,11 +44,8 @@ class Program
                     CreerCompte();
                     break;
                 case "3":
-                    Console.WriteLine("Au revoir, à bientôt!");
+                    Console.WriteLine("Au revoir !");
                     return;
-                default:
-                    Console.WriteLine("Option invalide, veuillez réessayer :(");
-                    break;
                 case "4":
 
                     // Initialisation et chargement des données
@@ -147,8 +141,10 @@ class Program
                             Console.WriteLine("\nAppuyez sur une touche pour continuer...");
                             Console.ReadKey();
                         }
-                    }break;
-                case "5" :
+                    }
+                    break;
+
+                case "5":
                     double[,] matriceAdjacence = GenererMatriceAdjacence(connectionString);
 
                     // Appliquer l'algorithme Welsh-Powell
@@ -185,17 +181,14 @@ class Program
                     Console.WriteLine($"Le graphe est-il biplanaire ? {biplanaire}");
                     break;
 
+                default:
+                    Console.WriteLine("Option invalide, veuillez réessayer.");
                     break;
-
             }
         }
     }
 
-    
 
-    
-
-      
 
     /// <summary>
     /// permet à un utilisateur de se connecter (client ou cuisinier)
@@ -204,65 +197,100 @@ class Program
     {
         while (true)
         {
-            // demande des identifiants
             Console.Write("\nEmail : ");
             string email = Console.ReadLine();
-            Console.Write("Mot de passe : ");
-            string mdp = Console.ReadLine();
 
-            // connexion à la base
+            Console.Write("Mot de passe : ");
+            string password = Console.ReadLine();
+
             using (MySqlConnection connection = new MySqlConnection(connectionString))
             {
                 connection.Open();
-                // vérifie les identifiants dans les deux tables
-                string requeteSql = @"SELECT 'Client' AS Role, idClient AS idUtilisateur, nom, prenom  FROM Client WHERE email = @Email AND motDePasse = @mdp
-                                  UNION
-                                  SELECT 'Cuisinier', idCuisinier AS idUtilisateur, nom, prenom FROM Cuisinier WHERE email = @Email AND motDePasse = @mdp";
 
-                MySqlCommand commandesql = new MySqlCommand(requeteSql, connection);
-                commandesql.Parameters.AddWithValue("@Email", email); // paramètre sécurisé
-                commandesql.Parameters.AddWithValue("@mdp", mdp);
+                // Test Admin
+                string queryAdmin = "SELECT * FROM Administrateur WHERE email = @Email AND motDePasse = @Password";
+                MySqlCommand cmdAdmin = new MySqlCommand(queryAdmin, connection);
+                cmdAdmin.Parameters.AddWithValue("@Email", email);
+                cmdAdmin.Parameters.AddWithValue("@Password", password);
 
-                using (MySqlDataReader lecteur = commandesql.ExecuteReader())
+                using (MySqlDataReader reader = cmdAdmin.ExecuteReader())
                 {
-                    if (lecteur.Read()) // si un utilisateur est trouvé
+                    if (reader.Read())
                     {
-                        string role = lecteur["Role"].ToString();
-                        int idUtilisateur = Convert.ToInt32(lecteur["idUtilisateur"]);
-                        string prenom = lecteur["prenom"].ToString();
-                        string nom = lecteur["nom"].ToString();
+                        Console.WriteLine($"\nBienvenue Admin {reader["prenom"]} {reader["nom"]} !");
+                        reader.Close();
 
-                        // message de bienvenue
-                        Console.WriteLine($"\nBienvenue, {prenom} {nom} ({role}) !");
-                        lecteur.Close();
-
-
-                        // redirige vers le bon menu
-                        if (role == "Client")
-                            MenuClient(idUtilisateur);
-                        else
-                            MenuCuisinier(idUtilisateur);
-
-                        return; // sortie de la méthode après connexion
-                    }
-                    else
-                    {
-                        Console.WriteLine("Email ou mot de passe incorrect.");
+                        Admin.MenuAdmin();
+                        return;
                     }
                 }
+
+                // Test Client
+                string queryClient = "SELECT * FROM Client WHERE email = @Email AND motDePasse = @Password";
+                MySqlCommand cmdClient = new MySqlCommand(queryClient, connection);
+                cmdClient.Parameters.AddWithValue("@Email", email);
+                cmdClient.Parameters.AddWithValue("@Password", password);
+
+                using (MySqlDataReader reader = cmdClient.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        int idClient = Convert.ToInt32(reader["idClient"]);
+                        Console.WriteLine($"\nBienvenue {reader["prenom"]} {reader["nom"]} (Client) !");
+                        reader.Close();
+                        MenuClient(idClient);
+                        return;
+                    }
+                }
+
+                // Test Cuisinier
+                string queryCuisinier = "SELECT * FROM Cuisinier WHERE email = @Email AND motDePasse = @Password";
+                MySqlCommand cmdCuisinier = new MySqlCommand(queryCuisinier, connection);
+                cmdCuisinier.Parameters.AddWithValue("@Email", email);
+                cmdCuisinier.Parameters.AddWithValue("@Password", password);
+
+                using (MySqlDataReader reader = cmdCuisinier.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        int idCuisinier = Convert.ToInt32(reader["idCuisinier"]);
+                        Console.WriteLine($"\nBienvenue {reader["prenom"]} {reader["nom"]} (Cuisinier) !");
+                        reader.Close();
+                        MenuCuisinier(idCuisinier);
+                        return;
+                    }
+                }
+
+                Console.WriteLine("Email ou mot de passe incorrect. Veuillez réessayer !");
             }
         }
     }
+
 
     /// <summary>
     /// permet à un utilisateur de créer un compte client ou cuisinier
     /// </summary>
     static void CreerCompte()
     {
-        Console.Write("\nVous êtes : 1) Client  2) Cuisinier\nChoix : ");
+        Console.Write("\nVous êtes : 1. Client  2. Cuisinier  3. Administrateur\nChoix : ");
         string role = Console.ReadLine();
 
-        // saisie des infos personnelles
+        if (role == "3")
+        {
+            Console.Write("Code de vérification administrateur : ");
+            string code = Console.ReadLine();
+
+            if (code != "0000")
+            {
+                Console.WriteLine("Code incorrect. Accès refusé.");
+                return;
+            }
+
+            Console.WriteLine("Connexion en tant qu'administrateur réussie !");
+            Admin.MenuAdmin();
+            return;
+        }
+
         Console.Write("Nom : ");
         string nom = Console.ReadLine();
         Console.Write("Prénom : ");
@@ -270,33 +298,35 @@ class Program
         Console.Write("Email : ");
         string email = Console.ReadLine();
         Console.Write("Mot de passe : ");
-        string mdp = Console.ReadLine();
-        Console.Write("rue : ");
+        string password = Console.ReadLine();
+        Console.Write("Rue : ");
         string rue = Console.ReadLine();
-        Console.Write("numMaison : ");
+        Console.Write("Numéro de maison : ");
         string numMaison = Console.ReadLine();
-        Console.Write("code Postal ? : ");
+        Console.Write("Code postal : ");
         string codePostal = Console.ReadLine();
-        Console.Write("numéro de téléphone : ");
+        Console.Write("Numéro de téléphone : ");
         string numTel = Console.ReadLine();
         Console.Write("Ville de résidence : ");
         string ville = Console.ReadLine();
-        Console.Write("Le métro le plus proche de chez vous: ");
+        Console.Write("Métro le plus proche : ");
         string metroProche = Console.ReadLine();
-        int totalCommande = 0; // initialisation à 0 pour un nouvel utilisateur
+        int totalCommande = 0;
 
         using (MySqlConnection connection = new MySqlConnection(connectionString))
         {
             connection.Open();
-            string requetesql = "";
+            string query = "";
 
-            if (role == "1")  // Inscription en tant que Client
+            if (role == "1") // Client
             {
-                requetesql = "INSERT INTO Client (nom, prenom, email, motDePasse, rue, numMaison, codePostal, numTel, ville, totalCommande, metroProche) VALUES (@Nom, @Prenom, @Email, @motDePasse, @rue, @numMaison, @codePostal, @numTel, @ville, @totalCommande, @metroProche)";
+                query = "INSERT INTO Client (nom, prenom, email, motDePasse, rue, numMaison, codePostal, numTel, ville, totalCommande, metroProche) " +
+                        "VALUES (@Nom, @Prenom, @Email, @Password, @rue, @numMaison, @codePostal, @numTel, @ville, @totalCommande, @metroProche)";
             }
-            else if (role == "2")  // Inscription en tant que Cuisinier
+            else if (role == "2") // Cuisinier
             {
-                requetesql = "INSERT INTO Cuisinier (nom, prenom, email, motDePasse, rue, numMaison, codePostal, numTel, ville, totalCommande, metroProche) VALUES (@Nom, @Prenom, @Email, @motDePasse, @rue, @numMaison, @codePostal, @numTel, @ville, @totalCommande, @metroProche)";
+                query = "INSERT INTO Cuisinier (nom, prenom, email, motDePasse, rue, numMaison, codePostal, numTel, ville, totalCommande, @metroProche) " +
+                        "VALUES (@Nom, @Prenom, @Email, @Password, @rue, @numMaison, @codePostal, @numTel, @ville, @totalCommande, @metroProche)";
             }
             else
             {
@@ -304,35 +334,26 @@ class Program
                 return;
             }
 
-            // preparation de la requete SQL
-            MySqlCommand commandesql = new MySqlCommand(requetesql, connection);
-            commandesql.Parameters.AddWithValue("@Nom", nom);
-            commandesql.Parameters.AddWithValue("@Prenom", prenom);
-            commandesql.Parameters.AddWithValue("@Email", email);
-            commandesql.Parameters.AddWithValue("@motDePasse", mdp);
-            commandesql.Parameters.AddWithValue("@rue", rue);
-            commandesql.Parameters.AddWithValue("@numMaison", numMaison);
-            commandesql.Parameters.AddWithValue("@codePostal", codePostal);
-            commandesql.Parameters.AddWithValue("@numTel", numTel);
-            commandesql.Parameters.AddWithValue("@ville", ville);
-            commandesql.Parameters.AddWithValue("@totalCommande", totalCommande);
-            commandesql.Parameters.AddWithValue("@metroProche", metroProche);
+            MySqlCommand command = new MySqlCommand(query, connection);
+            command.Parameters.AddWithValue("@Nom", nom);
+            command.Parameters.AddWithValue("@Prenom", prenom);
+            command.Parameters.AddWithValue("@Email", email);
+            command.Parameters.AddWithValue("@Password", password);
+            command.Parameters.AddWithValue("@rue", rue);
+            command.Parameters.AddWithValue("@numMaison", numMaison);
+            command.Parameters.AddWithValue("@codePostal", codePostal);
+            command.Parameters.AddWithValue("@numTel", numTel);
+            command.Parameters.AddWithValue("@ville", ville);
+            command.Parameters.AddWithValue("@totalCommande", totalCommande);
+            command.Parameters.AddWithValue("@metroProche", metroProche);
 
-
-            // execution de la requete
-            int ligneaff = commandesql.ExecuteNonQuery();
-            if (ligneaff > 0)
-            {
-                Console.WriteLine("Compte créé avec succès !");
-            }
-            else
-            {
-                Console.WriteLine("Erreur lors de la création du compte.");
-            }
-
-
+            int rowsAffected = command.ExecuteNonQuery();
+            Console.WriteLine(rowsAffected > 0 ? "Compte créé avec succès !" : "Erreur lors de la création du compte.");
         }
     }
+
+
+
 
     /// <summary>
     /// menu affiché pour les utilisateurs clients connectés
@@ -392,7 +413,8 @@ class Program
             Console.WriteLine("4) Voir les commandes à préparer");
             Console.WriteLine("5) Mettre à jour le statut d'une commande");
             Console.WriteLine("6) Voir les commandes réalisées");
-            Console.WriteLine("7) Se déconnecter");
+            Console.WriteLine("7) Trouver chemin plus court client");
+            Console.WriteLine("8) Se déconnecter");
             Console.Write("Choisissez une option : ");
             string choix = Console.ReadLine();
 
@@ -417,6 +439,10 @@ class Program
                     VoirCommandesRealisee(idCuisinier); // voir commandes terminées
                     break;
                 case "7":
+                    CalculerCheminVersClient(idCuisinier);
+                    break;
+
+                case "8":
                     return; // deconnexion
                 default:
                     Console.WriteLine("Option invalide, veuillez réessayer.");
@@ -1065,7 +1091,93 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
         Console.WriteLine($"• Changements: {nbChangements}");
         Console.WriteLine("------------------------------------------------");
     }
-    static Dictionary<int, Noeud<string>> ChargerNoeuds(string fichierExcel)
+
+    static void CalculerCheminVersClient(int idCuisinier)
+    {
+        using (MySqlConnection connection = new MySqlConnection(Program.connectionString))
+        {
+            connection.Open();
+
+            // Affiche les clients du cuisinier
+            string requeteClients = @"SELECT DISTINCT client.idClient, client.nom, client.prenom, client.metroProche
+                                  FROM Client
+                                  JOIN Commande ON Client.idClient = Commande.idClient
+                                  WHERE Commande.idCuisinier = @idCuisinier";
+
+            MySqlCommand cmd = new MySqlCommand(requeteClients, connection);
+            cmd.Parameters.AddWithValue("@idCuisinier", idCuisinier);
+
+            var clients = new Dictionary<int, string>();
+            using (MySqlDataReader reader = cmd.ExecuteReader())
+            {
+                Console.WriteLine("\n--- Clients ayant passé commande ---");
+                while (reader.Read())
+                {
+                    int id = Convert.ToInt32(reader["idClient"]);
+                    string nom = reader["nom"].ToString();
+                    string prenom = reader["prenom"].ToString();
+                    string metro = reader["metroProche"].ToString();
+
+                    Console.WriteLine($"ID: {id} | {prenom} {nom} - Métro: {metro}");
+                    clients[id] = metro;
+                }
+            }
+
+            if (clients.Count == 0)
+            {
+                Console.WriteLine("Aucun client trouvé.");
+                return;
+            }
+
+            // Saisie de l'id du client cible
+            Console.Write("\nEntrez l’ID du client pour calculer le chemin : ");
+            if (!int.TryParse(Console.ReadLine(), out int idClient) || !clients.ContainsKey(idClient))
+            {
+                Console.WriteLine("ID invalide.");
+                return;
+            }
+
+            // Récupérer le métro du cuisinier
+            string metroCuisinier = "";
+            string reqMetroC = "SELECT metroProche FROM Cuisinier WHERE idCuisinier = @idCuisinier";
+            MySqlCommand cmdMetroC = new MySqlCommand(reqMetroC, connection);
+            cmdMetroC.Parameters.AddWithValue("@idCuisinier", idCuisinier);
+            metroCuisinier = cmdMetroC.ExecuteScalar()?.ToString();
+
+            string metroClient = clients[idClient];
+
+            // Calcul du chemin avec graphe
+            var graphe = new Graphe<string>();
+            var noeuds = ChargerNoeuds("MetroParis(1).xlsx");
+            var arcs = ChargerArcs("MetroParis(1).xlsx", noeuds);
+
+            foreach (var noeud in noeuds.Values) graphe.AjouterNoeud(noeud);
+            foreach (var arc in arcs) graphe.AjouterLien(arc.Item1, arc.Item2, arc.Item3);
+
+            var depart = noeuds.Values.FirstOrDefault(n => n.Libelle.ToUpper().Contains(metroCuisinier.ToUpper()));
+            var arrivee = noeuds.Values.FirstOrDefault(n => n.Libelle.ToUpper().Contains(metroClient.ToUpper()));
+
+            if (depart == null || arrivee == null)
+            {
+                Console.WriteLine("Erreur : station introuvable.");
+                return;
+            }
+
+            var chemin = Chemin<string>.Dijsktra(graphe, depart, arrivee);
+            if (chemin.Count == 0)
+            {
+                Console.WriteLine("Aucun chemin trouvé.");
+                return;
+            }
+
+            AfficherChemin(chemin);
+            graphe.AfficherGraphe("chemin_cuisinier_client.png", chemin);
+            Process.Start(new ProcessStartInfo { FileName = "chemin_cuisinier_client.png", UseShellExecute = true });
+        }
+    }
+
+    // Ajouter cette méthode statique à la classe Program pour rendre ChargerNoeuds accessible depuis ExportData
+    public static Dictionary<int, Noeud<string>> ChargerNoeuds(string fichierExcel)
     {
         var noeuds = new Dictionary<int, Noeud<string>>();
         var stationsParNom = new Dictionary<string, List<Noeud<string>>>();
@@ -1130,6 +1242,7 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
     static List<Tuple<Noeud<string>, Noeud<string>, double>> ChargerArcs(string fichierExcel, Dictionary<int, Noeud<string>> noeuds)
     {
         var arcs = new HashSet<Tuple<Noeud<string>, Noeud<string>, double>>(new ArcEqualityComparer());
+
         string connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={fichierExcel};Extended Properties='Excel 12.0;HDR=YES;IMEX=1'";
 
         using (OleDbConnection connection = new OleDbConnection(connectionString))
@@ -1183,6 +1296,32 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
         }
         return arcs.ToList();
     }
+
+    // Nouvelle classe pour éviter les doublons
+
+    class ArcEqualityComparer : IEqualityComparer<Tuple<Noeud<string>, Noeud<string>, double>>
+    {
+        public bool Equals(Tuple<Noeud<string>, Noeud<string>, double> x, Tuple<Noeud<string>, Noeud<string>, double> y)
+        {
+            return x.Item1.Id == y.Item1.Id && x.Item2.Id == y.Item2.Id;
+        }
+
+        public int GetHashCode(Tuple<Noeud<string>, Noeud<string>, double> obj)
+        {
+            return obj.Item1.Id.GetHashCode() ^ obj.Item2.Id.GetHashCode();
+        }
+    }
+
+    // Nouvelle classe pour éviter les doublons
+
+    static int ParseId(string text)
+    {
+        if (text.StartsWith("=A") || text.StartsWith("=D") || text.StartsWith("=C"))
+            return int.Parse(text.Substring(3).Replace("+1", ""));
+        return int.Parse(text);
+    }
+
+
     public static int[] WelshPowell(double[,] mat_adj)
     {
         int n = mat_adj.GetLength(0);
@@ -1388,28 +1527,9 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
         return true;
     }
 
-    class ArcEqualityComparer : IEqualityComparer<Tuple<Noeud<string>, Noeud<string>, double>>
-    {
-        public bool Equals(Tuple<Noeud<string>, Noeud<string>, double> x, Tuple<Noeud<string>, Noeud<string>, double> y)
-        {
-            return x.Item1.Id == y.Item1.Id && x.Item2.Id == y.Item2.Id;
-        }
 
-        public int GetHashCode(Tuple<Noeud<string>, Noeud<string>, double> obj)
-        {
-            return obj.Item1.Id.GetHashCode() ^ obj.Item2.Id.GetHashCode();
-        }
-    }
 
-    // Nouvelle classe pour éviter les doublons
-
-    static int ParseId(string text)
-    {
-        if (text.StartsWith("=A") || text.StartsWith("=D") || text.StartsWith("=C"))
-            return int.Parse(text.Substring(3).Replace("+1", ""));
-        return int.Parse(text);
-    }
-    class Admin
+    public class Admin
     {
         public static void MenuAdmin()
         {
@@ -1420,7 +1540,8 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
                 Console.WriteLine("2. Gérer les cuisiniers");
                 Console.WriteLine("3. Gérer les commandes");
                 Console.WriteLine("4. Voir tous les plats");
-                Console.WriteLine("5. Quitter");
+                Console.WriteLine("5. Exporter les données");
+                Console.WriteLine("6. Quitter");
                 Console.Write("Choisissez une option : ");
                 string choix = Console.ReadLine();
 
@@ -1439,6 +1560,9 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
                         VoirTousLesPlats();
                         break;
                     case "5":
+                        MenuExportation();
+                        break;
+                    case "6":
                         return;
                     default:
                         Console.WriteLine("Option invalide.");
@@ -1446,6 +1570,64 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
                 }
             }
         }
+
+        static void MenuExportation()
+        {
+            while (true)
+            {
+                Console.WriteLine("\n--- Menu Exportation ---");
+                Console.WriteLine("1. Exporter les clients");
+                Console.WriteLine("2. Exporter les cuisiniers");
+                Console.WriteLine("3. Exporter les plats");
+                Console.WriteLine("4. Exporter les commandes");
+                Console.WriteLine("5. Retour au menu principal");
+                Console.Write("Choisissez une option : ");
+                string choix = Console.ReadLine();
+
+                if (choix == "5") return;
+
+                Console.WriteLine("\nFormat d'exportation :");
+                Console.WriteLine("1. JSON");
+                Console.WriteLine("2. XML");
+                Console.Write("Choisissez un format : ");
+                string format = Console.ReadLine();
+
+                Console.Write("\nNom du fichier de sortie (sans extension) : ");
+                string fileName = Console.ReadLine();
+
+                switch (choix)
+                {
+                    case "1": // Clients
+                        if (format == "1")
+                            ExportData.ExportClientsToJson($"{fileName}.json");
+                        else if (format == "2")
+                            ExportData.ExportClientsToXml($"{fileName}.xml");
+                        break;
+                    case "2": // Cuisiniers
+                        if (format == "1")
+                            ExportData.ExportCuisiniersToJson($"{fileName}.json");
+                        else if (format == "2")
+                            ExportData.ExportCuisiniersToXml($"{fileName}.xml");
+                        break;
+                    case "3": // Plats
+                        if (format == "1")
+                            ExportData.ExportPlatsToJson($"{fileName}.json");
+                        else if (format == "2")
+                            ExportData.ExportPlatsToXml($"{fileName}.xml");
+                        break;
+                    case "4": // Commandes
+                        if (format == "1")
+                            ExportData.ExportCommandesToJson($"{fileName}.json");
+                        else if (format == "2")
+                            ExportData.ExportCommandesToXml($"{fileName}.xml");
+                        break;
+                    default:
+                        Console.WriteLine("Option invalide.");
+                        break;
+                }
+            }
+        }
+
 
         static void GérerClients()
         {
@@ -1604,4 +1786,164 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
         }
     }
 
+    class Statistiques
+    {
+        private static string connectionString = Program.connectionString;
+        public static void MenuStatistiques()
+        {
+            while (true)
+            {
+                Console.WriteLine("\n--- Module Statistiques ---");
+                Console.WriteLine("1. Nombre de commandes par cuisinier (GROUP BY)");
+                Console.WriteLine("2. Cuisiniers ayant fait plus de 2 commandes (HAVING)");
+                Console.WriteLine("3. Clients n’ayant jamais commandé (LEFT JOIN + IS NULL)");
+                Console.WriteLine("4. Commandes plus chères que toutes celles du client 1 (ALL)");
+                Console.WriteLine("5. Cuisiniers ayant au moins une commande (EXISTS)");
+                Console.WriteLine("6. Retour");
+
+                Console.Write("Votre choix : ");
+                string choix = Console.ReadLine();
+
+                switch (choix)
+                {
+                    case "1":
+                        NbCommandesParCuisinier();
+                        break;
+                    case "2":
+                        CuisiniersActifs();
+                        break;
+                    case "3":
+                        ClientsSansCommandes();
+                        break;
+                    case "4":
+                        CommandesPlusChèresQueClient1();
+                        break;
+                    case "5":
+                        CuisiniersAvecCommandes();
+                        break;
+                    case "6":
+                        return;
+                    default:
+                        Console.WriteLine("Option invalide.");
+                        break;
+                }
+            }
+        }
+
+        // 1. GROUP BY
+        static void NbCommandesParCuisinier()
+        {
+            using var connection = new MySqlConnection(connectionString);
+            connection.Open();
+
+            string query = @"
+        SELECT C.nom, COUNT(*) AS nbCommandes
+        FROM Cuisinier C
+        JOIN Commande Co ON C.idCuisinier = Co.idCuisinier
+        GROUP BY C.idCuisinier";
+
+            using var cmd = new MySqlCommand(query, connection);
+            using var reader = cmd.ExecuteReader();
+
+            Console.WriteLine("\nNombre de commandes par cuisinier :");
+            while (reader.Read())
+            {
+                Console.WriteLine($"Cuisinier : {reader["nom"]}, Commandes : {reader["nbCommandes"]}");
+            }
+        }
+
+        // 2. HAVING
+        static void CuisiniersActifs()
+        {
+            using var connection = new MySqlConnection(connectionString);
+            connection.Open();
+
+            string query = @"
+        SELECT C.nom, COUNT(*) AS nbCommandes
+        FROM Cuisinier C
+        JOIN Commande Co ON C.idCuisinier = Co.idCuisinier
+        GROUP BY C.idCuisinier
+        HAVING nbCommandes > 2";
+
+            using var cmd = new MySqlCommand(query, connection);
+            using var reader = cmd.ExecuteReader();
+
+            Console.WriteLine("\nCuisiniers avec plus de 2 commandes :");
+            while (reader.Read())
+            {
+                Console.WriteLine($"Cuisinier : {reader["nom"]}, Commandes : {reader["nbCommandes"]}");
+            }
+        }
+
+        // 3. LEFT JOIN + IS NULL
+        static void ClientsSansCommandes()
+        {
+            using var connection = new MySqlConnection(connectionString);
+            connection.Open();
+
+            string query = @"
+        SELECT CL.nom, CL.prenom
+        FROM Client CL
+        LEFT JOIN Commande C ON CL.idClient = C.idClient
+        WHERE C.idCommande IS NULL";
+
+            using var cmd = new MySqlCommand(query, connection);
+            using var reader = cmd.ExecuteReader();
+
+            Console.WriteLine("\nClients sans commandes :");
+            while (reader.Read())
+            {
+                Console.WriteLine($"Nom : {reader["nom"]}, Prénom : {reader["prenom"]}");
+            }
+        }
+
+        // 4. ANY/ALL
+        static void CommandesPlusChèresQueClient1()
+        {
+            using var connection = new MySqlConnection(connectionString);
+            connection.Open();
+
+            string query = @"
+        SELECT *
+        FROM Commande
+        WHERE prix > ALL (
+            SELECT prix FROM Commande WHERE idClient = 1
+        )";
+
+            using var cmd = new MySqlCommand(query, connection);
+            using var reader = cmd.ExecuteReader();
+
+            Console.WriteLine("\nCommandes plus chères que toutes celles du client 1 :");
+            while (reader.Read())
+            {
+                Console.WriteLine($"Commande #{reader["idCommande"]}, Prix : {reader["prix"]} €");
+            }
+        }
+
+        // 5. EXISTS
+        static void CuisiniersAvecCommandes()
+        {
+            using var connection = new MySqlConnection(connectionString);
+            connection.Open();
+
+            string query = @"
+        SELECT *
+        FROM Cuisinier C
+        WHERE EXISTS (
+            SELECT * FROM Commande Co WHERE Co.idCuisinier = C.idCuisinier
+        )";
+
+            using var cmd = new MySqlCommand(query, connection);
+            using var reader = cmd.ExecuteReader();
+
+            Console.WriteLine("\nCuisiniers ayant au moins une commande :");
+            while (reader.Read())
+            {
+                Console.WriteLine($"Nom : {reader["nom"]}, Email : {reader["email"]}");
+            }
+        }
+    }
 }
+
+
+
