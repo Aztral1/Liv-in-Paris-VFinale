@@ -47,6 +47,15 @@ public class Noeud<T>
     /// </summary>
     public double TempsChangement { get; set; }
 
+    // Ajouter cette propriété à la classe Noeud pour accéder aux lignes
+    public List<string> Lignes
+    {
+        get
+        {
+            return new List<string> { LibelleLigne };
+        }
+    }
+
     /// <summary>
     /// constructeur qui initialise toutes les propriétés d’un noeud.
     /// </summary>
@@ -60,7 +69,7 @@ public class Noeud<T>
     /// <param name="tempschangement"></param>
     public Noeud(int id, T libelle, string libelleLigne, double longitude, double latitude, string commune, string codeInsee, double tempschangement)
     {
-        
+
         Id = id;
         Libelle = libelle;
         LibelleLigne = libelleLigne;
