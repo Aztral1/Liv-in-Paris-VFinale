@@ -17,8 +17,8 @@ public static class ExportData
     public static void ExportClientsToJson(string filePath)
     {
         var clients = GetClientsFromDatabase();
-        string donneesJson = JsonSerializer.Serialize(clients, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(filePath, donneesJson);
+        string jsonString = JsonSerializer.Serialize(clients, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(filePath, jsonString);
         Console.WriteLine($"Données des clients exportées avec succès vers {filePath}");
     }
 
@@ -29,10 +29,10 @@ public static class ExportData
     public static void ExportClientsToXml(string filePath)
     {
         var clients = GetClientsFromDatabase();
-        XmlSerializer convertisseurXml = new XmlSerializer(typeof(List<ClientData>));
+        XmlSerializer serializer = new XmlSerializer(typeof(List<ClientData>));
         using (TextWriter writer = new StreamWriter(filePath))
         {
-            convertisseurXml.Serialize(writer, clients);
+            serializer.Serialize(writer, clients);
         }
         Console.WriteLine($"Données des clients exportées avec succès vers {filePath}");
     }
@@ -44,8 +44,8 @@ public static class ExportData
     public static void ExportCuisiniersToJson(string filePath)
     {
         var cuisiniers = GetCuisiniersFromDatabase();
-        string donneesJson = JsonSerializer.Serialize(cuisiniers, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(filePath, donneesJson);
+        string jsonString = JsonSerializer.Serialize(cuisiniers, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(filePath, jsonString);
         Console.WriteLine($"Données des cuisiniers exportées avec succès vers {filePath}");
     }
 
@@ -56,10 +56,10 @@ public static class ExportData
     public static void ExportCuisiniersToXml(string filePath)
     {
         var cuisiniers = GetCuisiniersFromDatabase();
-        XmlSerializer convertisseurXml = new XmlSerializer(typeof(List<CuisinierData>));
+        XmlSerializer serializer = new XmlSerializer(typeof(List<CuisinierData>));
         using (TextWriter writer = new StreamWriter(filePath))
         {
-            convertisseurXml.Serialize(writer, cuisiniers);
+            serializer.Serialize(writer, cuisiniers);
         }
         Console.WriteLine($"Données des cuisiniers exportées avec succès vers {filePath}");
     }
@@ -71,8 +71,8 @@ public static class ExportData
     public static void ExportPlatsToJson(string filePath)
     {
         var plats = GetPlatsFromDatabase();
-        string donneesJson = JsonSerializer.Serialize(plats, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(filePath, donneesJson);
+        string jsonString = JsonSerializer.Serialize(plats, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(filePath, jsonString);
         Console.WriteLine($"Données des plats exportées avec succès vers {filePath}");
     }
 
@@ -83,10 +83,10 @@ public static class ExportData
     public static void ExportPlatsToXml(string filePath)
     {
         var plats = GetPlatsFromDatabase();
-        XmlSerializer convertisseurXml = new XmlSerializer(typeof(List<PlatData>));
+        XmlSerializer serializer = new XmlSerializer(typeof(List<PlatData>));
         using (TextWriter writer = new StreamWriter(filePath))
         {
-            convertisseurXml.Serialize(writer, plats);
+            serializer.Serialize(writer, plats);
         }
         Console.WriteLine($"Données des plats exportées avec succès vers {filePath}");
     }
@@ -98,8 +98,8 @@ public static class ExportData
     public static void ExportCommandesToJson(string filePath)
     {
         var commandes = GetCommandesFromDatabase();
-        string donneesJson = JsonSerializer.Serialize(commandes, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(filePath, donneesJson);
+        string jsonString = JsonSerializer.Serialize(commandes, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(filePath, jsonString);
         Console.WriteLine($"Données des commandes exportées avec succès vers {filePath}");
     }
 
@@ -110,10 +110,10 @@ public static class ExportData
     public static void ExportCommandesToXml(string filePath)
     {
         var commandes = GetCommandesFromDatabase();
-        XmlSerializer convertisseurXml = new XmlSerializer(typeof(List<CommandeData>));
+        XmlSerializer serializer = new XmlSerializer(typeof(List<CommandeData>));
         using (TextWriter writer = new StreamWriter(filePath))
         {
-            convertisseurXml.Serialize(writer, commandes);
+            serializer.Serialize(writer, commandes);
         }
         Console.WriteLine($"Données des commandes exportées avec succès vers {filePath}");
     }
@@ -144,8 +144,8 @@ public static class ExportData
             stationsData.Add(stationData);
         }
 
-        string donneesJson = JsonSerializer.Serialize(stationsData, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(filePath, donneesJson);
+        string jsonString = JsonSerializer.Serialize(stationsData, new JsonSerializerOptions { WriteIndented = true });
+        File.WriteAllText(filePath, jsonString);
         Console.WriteLine($"Données du graphe du métro exportées avec succès vers {filePath}");
     }
 
@@ -175,16 +175,18 @@ public static class ExportData
             stationsData.Add(stationData);
         }
 
-        XmlSerializer convertisseurXml = new XmlSerializer(typeof(List<StationMetroData>));
+        XmlSerializer serializer = new XmlSerializer(typeof(List<StationMetroData>));
         using (TextWriter writer = new StreamWriter(filePath))
         {
-            convertisseurXml.Serialize(writer, stationsData);
+            serializer.Serialize(writer, stationsData);
         }
         Console.WriteLine($"Données du graphe du métro exportées avec succès vers {filePath}");
     }
 
-    // Méthodes privées pour récupérer les données de la base de données
-
+    /// <summary>
+    /// méthode privée pour récupérer les données des clients de la BDD 
+    /// </summary>
+    /// <returns></returns>
     private static List<ClientData> GetClientsFromDatabase()
     {
         var clients = new List<ClientData>();
@@ -218,6 +220,10 @@ public static class ExportData
         return clients;
     }
 
+    /// <summary>
+    /// méthode privée pour récupérer les données des cuisiniers de la BDD 
+    /// </summary>
+    /// <returns></returns>
     private static List<CuisinierData> GetCuisiniersFromDatabase()
     {
         var cuisiniers = new List<CuisinierData>();
@@ -251,6 +257,10 @@ public static class ExportData
         return cuisiniers;
     }
 
+    /// <summary>
+    /// méthode privée pour récupérer les données des plats de la BDD 
+    /// </summary>
+    /// <returns></returns>
     private static List<PlatData> GetPlatsFromDatabase()
     {
         var plats = new List<PlatData>();
@@ -281,6 +291,10 @@ public static class ExportData
         return plats;
     }
 
+    /// <summary>
+    /// méthode privée pour récupérer les données des commandes de la BDD 
+    /// </summary>
+    /// <returns></returns>
     private static List<CommandeData> GetCommandesFromDatabase()
     {
         var commandes = new List<CommandeData>();
