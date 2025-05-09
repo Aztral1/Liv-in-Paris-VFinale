@@ -1013,20 +1013,31 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             }
         }
     }
+
+
     /// <summary>
-    /// Charge les noeuds (stations) 
+    /// convertit des degrés en radian
     /// </summary>
-    /// <param name="fichierExcel"></param>
+    /// <param name="deg"></param>
     /// <returns></returns>
-
-
     static double DegresToRadians(double deg) => deg * (Math.PI / 180);
+
+    /// <summary>
+    /// calcule la distance entre deux points géographiques
+    /// </summary>
+    /// <param name="lat1"></param>
+    /// <param name="lon1"></param>
+    /// <param name="lat2"></param>
+    /// <param name="lon2"></param>
+    /// <returns></returns>
     static double CalculerDistanceHaversine(double lat1, double lon1, double lat2, double lon2)
     {
         const double R = 6371; // Rayon terrestre en km
         var dLat = DegresToRadians(lat2 - lat1);
         var dLon = DegresToRadians(lon2 - lon1);
 
+
+        // formule de Haversine pour calculer la distance sur une sphère
         var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
                 Math.Cos(DegresToRadians(lat1)) * Math.Cos(DegresToRadians(lat2)) *
                 Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
@@ -1034,6 +1045,11 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
         var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
         return R * c;
     }
+
+    /// <summary>
+    /// Affiche le chemin détaillé entre 2 stations avec temps de trajet, changements
+    /// </summary>
+    /// <param name="chemin"></param>
     static void AfficherChemin(List<Noeud<string>> chemin)
     {
         Console.WriteLine($"\n Chemin de {chemin.First().Libelle} à {chemin.Last().Libelle} :");
@@ -1048,6 +1064,7 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             var current = chemin[i];
             var next = chemin[i + 1];
 
+            // recherche du lien entre les stations
             var lien = current.Liens.FirstOrDefault(l => l.Destination == next)
                      ?? next.Liens.First(l => l.Destination == current);
 
@@ -1082,6 +1099,7 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             }
         }
 
+        // affichage du résumé du trajet
         Console.WriteLine($"\n SYNTHÈSE DU TRAJET:");
         Console.WriteLine($"• Temps de trajet: {tempsTrajet} minutes");
         Console.WriteLine($"• Temps de changement: {tempsTotal - tempsTrajet} minutes");
@@ -1092,6 +1110,11 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
         Console.WriteLine("------------------------------------------------");
     }
 
+  
+    /// <summary>
+    /// calcule et affiche chemin optimal entre cuisinier et client
+    /// </summary>
+    /// <param name="idCuisinier"></param>
     static void CalculerCheminVersClient(int idCuisinier)
     {
         using (MySqlConnection connection = new MySqlConnection(Program.connectionString))
@@ -1151,9 +1174,11 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             var noeuds = ChargerNoeuds("MetroParis(1).xlsx");
             var arcs = ChargerArcs("MetroParis(1).xlsx", noeuds);
 
+            //ajout des noeuds et arcs du graphe 
             foreach (var noeud in noeuds.Values) graphe.AjouterNoeud(noeud);
             foreach (var arc in arcs) graphe.AjouterLien(arc.Item1, arc.Item2, arc.Item3);
 
+            //recherche des stations de départ et d'arrivée
             var depart = noeuds.Values.FirstOrDefault(n => n.Libelle.ToUpper().Contains(metroCuisinier.ToUpper()));
             var arrivee = noeuds.Values.FirstOrDefault(n => n.Libelle.ToUpper().Contains(metroClient.ToUpper()));
 
@@ -1163,6 +1188,7 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
                 return;
             }
 
+            // calcul du chemin avec Djikstra
             var chemin = Chemin<string>.Dijsktra(graphe, depart, arrivee);
             if (chemin.Count == 0)
             {
@@ -1170,13 +1196,18 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
                 return;
             }
 
+            //affichage du résultat
             AfficherChemin(chemin);
             graphe.AfficherGraphe("chemin_cuisinier_client.png", chemin);
             Process.Start(new ProcessStartInfo { FileName = "chemin_cuisinier_client.png", UseShellExecute = true });
         }
     }
 
-    // Ajouter cette méthode statique à la classe Program pour rendre ChargerNoeuds accessible depuis ExportData
+    /// <summary>
+    /// charge les noeuds depuis un fichier excel
+    /// </summary>
+    /// <param name="fichierExcel"></param>
+    /// <returns></returns>
     public static Dictionary<int, Noeud<string>> ChargerNoeuds(string fichierExcel)
     {
         var noeuds = new Dictionary<int, Noeud<string>>();
@@ -1189,7 +1220,7 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             OleDbCommand command = new OleDbCommand("SELECT * FROM [Noeuds$]", connection);
             OleDbDataReader reader = command.ExecuteReader();
 
-            // 1. Chargement initial des nœuds
+            //  Chargement initial des nœuds
             while (reader.Read())
             {
                 int id = int.Parse(reader[0].ToString());
@@ -1221,7 +1252,7 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
                 stationsParNom[libelleStation].Add(noeud);
             }
 
-            // 2. Création des liens de correspondance
+            //  Création des liens de correspondance
             foreach (var groupe in stationsParNom.Where(g => g.Value.Count > 1))
             {
                 var stations = groupe.Value;
@@ -1239,8 +1270,15 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
         return noeuds;
     }
 
+    /// <summary>
+    /// charge les arcs depuis un fichier excel
+    /// </summary>
+    /// <param name="fichierExcel"></param>
+    /// <param name="noeuds"></param>
+    /// <returns></returns>
     static List<Tuple<Noeud<string>, Noeud<string>, double>> ChargerArcs(string fichierExcel, Dictionary<int, Noeud<string>> noeuds)
     {
+       // utilisation d'un HashSet avec un comparateur personnalisé pour éviter les doublons
         var arcs = new HashSet<Tuple<Noeud<string>, Noeud<string>, double>>(new ArcEqualityComparer());
 
         string connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={fichierExcel};Extended Properties='Excel 12.0;HDR=YES;IMEX=1'";
@@ -1297,8 +1335,9 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
         return arcs.ToList();
     }
 
-    // Nouvelle classe pour éviter les doublons
-
+    /// <summary>
+    /// permet de comparer des arcs pour éviter les doublons dans le HashSet
+    /// </summary>
     class ArcEqualityComparer : IEqualityComparer<Tuple<Noeud<string>, Noeud<string>, double>>
     {
         public bool Equals(Tuple<Noeud<string>, Noeud<string>, double> x, Tuple<Noeud<string>, Noeud<string>, double> y)
@@ -1312,8 +1351,12 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
         }
     }
 
-    // Nouvelle classe pour éviter les doublons
-
+    
+    /// <summary>
+    /// parse les identifiants de stations depuis le format excel
+    /// </summary>
+    /// <param name="text"></param>
+    /// <returns></returns>
     static int ParseId(string text)
     {
         if (text.StartsWith("=A") || text.StartsWith("=D") || text.StartsWith("=C"))
@@ -1321,13 +1364,17 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
         return int.Parse(text);
     }
 
-
+    /// <summary>
+    /// implémente l'algo de Welsh-Powell pour la coloration de graphe
+    /// </summary>
+    /// <param name="mat_adj"></param>
+    /// <returns></returns>
     public static int[] WelshPowell(double[,] mat_adj)
     {
         int n = mat_adj.GetLength(0);
         int[] degrees = new int[n];
 
-        // Calcul des degrés
+        // Calcul des degrés de chaque sommet
         for (int i = 0; i < n; i++)
             for (int j = 0; j < n; j++)
                 if (mat_adj[i, j] != 0)
@@ -1336,6 +1383,7 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
         List<int> listSommet = new List<int>();
         bool[] dejavu = new bool[n];
 
+        // tri des sommets par degrés croissants
         for (int count = 0; count < n; count++)
         {
             int degreemax = -1;
@@ -1357,6 +1405,7 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             }
         }
 
+        // coloration des sommets
         int[] result = new int[n];
         for (int i = 0; i < n; i++) result[i] = -1; // -1 = non coloré
 
@@ -1370,6 +1419,7 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
 
             result[v] = couleur;
 
+            // coloration des sommets non-adjacents avec la même couleur
             for (int j = i + 1; j < n; j++)
             {
                 int u = listSommet[j];
@@ -1385,6 +1435,12 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
 
         return result;
     }
+
+    /// <summary>
+    /// vérifie si un graphe est biplanaire en utilisant la formule d'Euler
+    /// </summary>
+    /// <param name="matriceAdjacence"></param>
+    /// <returns></returns>
     public static bool EstBiplanaire(double[,] matriceAdjacence)
     {
         int taille = matriceAdjacence.GetLength(0);
@@ -1404,6 +1460,15 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
         // Vérification de la condition de planéité d'un graphe connexe
         return nombreAretes <= 2 * (3 * taille - 6);
     }
+
+    /// <summary>
+    /// vérifie si un sommet est adjacent à un sommet de la couleur spécifiée
+    /// </summary>
+    /// <param name="mat"></param>
+    /// <param name="result"></param>
+    /// <param name="sommet"></param>
+    /// <param name="couleur"></param>
+    /// <returns></returns>
     private static bool EstAdjacent(double[,] mat, int[] result, int sommet, int couleur)
     {
         int n = mat.GetLength(0);
@@ -1415,6 +1480,11 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
         return false;
     }
 
+    /// <summary>
+    /// vérifie si un graphe est biparti (et donc 2-coloriable)
+    /// </summary>
+    /// <param name="matriceAdjacence"></param>
+    /// <returns></returns>
     public static bool EstBiparti(double[,] matriceAdjacence)
     {
         int taille = matriceAdjacence.GetLength(0);
@@ -1435,6 +1505,12 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
 
         return true;
     }
+
+    /// <summary>
+    /// génère une matrice d'adjacence à partir des données de la base MySQL
+    /// </summary>
+    /// <param name="connectionString"></param>
+    /// <returns></returns>
     public static double[,] GenererMatriceAdjacence(string connectionString)
     {
         var utilisateurs = new Dictionary<int, int>(); // idUtilisateur -> indexMatrice
@@ -1504,6 +1580,14 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
         return matriceAdjacence;
     }
 
+    /// <summary>
+    /// vérifie si un graphe est biparti en utilisant un parcours en profondeur (DFS)
+    /// </summary>
+    /// <param name="matrice"></param>
+    /// <param name="sommet"></param>
+    /// <param name="couleur"></param>
+    /// <param name="couleurs"></param>
+    /// <returns></returns>
     private static bool VerifierBipartiDFS(double[,] matrice, int sommet, int couleur, int[] couleurs)
     {
         couleurs[sommet] = couleur;
@@ -1528,7 +1612,9 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
     }
 
 
-
+    /// <summary>
+    /// classe admin qui gère les fonctionnalitées de l'administrateur
+    /// </summary>
     public class Admin
     {
         public static void MenuAdmin()
@@ -1571,6 +1657,9 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             }
         }
 
+        /// <summary>
+        /// menu d'exportation des donbnées vers Json ou XML
+        /// </summary>
         static void MenuExportation()
         {
             while (true)
@@ -1628,7 +1717,9 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             }
         }
 
-
+        /// <summary>
+        /// gestion des clients
+        /// </summary>
         static void GérerClients()
         {
             Console.WriteLine("\n--- Tous les Clients ---");
@@ -1644,11 +1735,13 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
                     }
                 }
 
+                // option de modification ou suppression
                 Console.Write("\nSouhaitez-vous modifier (m) ou supprimer (s) un client ? (ou Entrée pour revenir) : ");
                 string action = Console.ReadLine().ToLower();
 
                 if (action == "m")
                 {
+                    // modification d'un client
                     Console.Write("ID du client à modifier : ");
                     int id = int.Parse(Console.ReadLine());
                     Console.Write("Nouveau nom : ");
@@ -1663,6 +1756,7 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
                 }
                 else if (action == "s")
                 {
+                    // suppression d'un client
                     Console.Write("ID du client à supprimer : ");
                     int id = int.Parse(Console.ReadLine());
 
@@ -1675,6 +1769,9 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             }
         }
 
+        /// <summary>
+        /// gestion des cuisiniers
+        /// </summary>
         static void GérerCuisiniers()
         {
             Console.WriteLine("\n--- Tous les Cuisiniers ---");
@@ -1721,6 +1818,9 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             }
         }
 
+        /// <summary>
+        /// gestion des commandes
+        /// </summary>
         static void GérerCommandes()
         {
             Console.WriteLine("\n--- Toutes les Commandes ---");
@@ -1767,6 +1867,9 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             }
         }
 
+        /// <summary>
+        /// affiche tous les plats disponibles dans la BDD
+        /// </summary>
         static void VoirTousLesPlats()
         {
             using (MySqlConnection connection = new MySqlConnection(Program.connectionString))
@@ -1786,9 +1889,16 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
         }
     }
 
+    /// <summary>
+    /// classe qui gère les statistiques du système
+    /// </summary>
     class Statistiques
     {
         private static string connectionString = Program.connectionString;
+
+        /// <summary>
+        /// menu principal des statistiques
+        /// </summary>
         public static void MenuStatistiques()
         {
             while (true)
@@ -1830,7 +1940,9 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             }
         }
 
-        // 1. GROUP BY
+        /// <summary>
+        /// affichen le nb de commandes par cuisinier
+        /// </summary>
         static void NbCommandesParCuisinier()
         {
             using var connection = new MySqlConnection(connectionString);
@@ -1852,7 +1964,9 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             }
         }
 
-        // 2. HAVING
+        /// <summary>
+        /// affiche les cuisiniers ayant plus de 2 commandes
+        /// </summary>
         static void CuisiniersActifs()
         {
             using var connection = new MySqlConnection(connectionString);
@@ -1875,7 +1989,9 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             }
         }
 
-        // 3. LEFT JOIN + IS NULL
+        /// <summary>
+        /// affiche les clients n'ayant jamais commandé
+        /// </summary>
         static void ClientsSansCommandes()
         {
             using var connection = new MySqlConnection(connectionString);
@@ -1897,7 +2013,9 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             }
         }
 
-        // 4. ANY/ALL
+        /// <summary>
+        /// affiche les commandes plus chères que toutes celles du client 1
+        /// </summary>
         static void CommandesPlusChèresQueClient1()
         {
             using var connection = new MySqlConnection(connectionString);
@@ -1920,7 +2038,9 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             }
         }
 
-        // 5. EXISTS
+        /// <summary>
+        /// affiche les cuisiniers ayant au moins une commande
+        /// </summary>
         static void CuisiniersAvecCommandes()
         {
             using var connection = new MySqlConnection(connectionString);
