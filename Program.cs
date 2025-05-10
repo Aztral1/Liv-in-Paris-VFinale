@@ -6,7 +6,6 @@ using System.Linq;
 using SkiaSharp;
 using MySql.Data.MySqlClient;
 using System.Diagnostics;
-using psi_rendu;
 
 
 
@@ -325,7 +324,7 @@ class Program
             }
             else if (role == "2") // Cuisinier
             {
-                query = "INSERT INTO Cuisinier (nom, prenom, email, motDePasse, rue, numMaison, codePostal, numTel, ville, totalCommande, @metroProche) " +
+                query = "INSERT INTO Cuisinier (nom, prenom, email, motDePasse, rue, numMaison, codePostal, numTel, ville, totalCommande, metroProche) " +
                         "VALUES (@Nom, @Prenom, @Email, @Password, @rue, @numMaison, @codePostal, @numTel, @ville, @totalCommande, @metroProche)";
             }
             else
@@ -1627,7 +1626,8 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
                 Console.WriteLine("3. Gérer les commandes");
                 Console.WriteLine("4. Voir tous les plats");
                 Console.WriteLine("5. Exporter les données");
-                Console.WriteLine("6. Quitter");
+                Console.WriteLine("6. Stat");
+                Console.WriteLine("7. Quitter");
                 Console.Write("Choisissez une option : ");
                 string choix = Console.ReadLine();
 
@@ -1649,6 +1649,9 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
                         MenuExportation();
                         break;
                     case "6":
+                        Statistiques.MenuStatistiques();
+                        break;
+                    case "7":
                         return;
                     default:
                         Console.WriteLine("Option invalide.");
@@ -1907,9 +1910,8 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
                 Console.WriteLine("1. Nombre de commandes par cuisinier (GROUP BY)");
                 Console.WriteLine("2. Cuisiniers ayant fait plus de 2 commandes (HAVING)");
                 Console.WriteLine("3. Clients n’ayant jamais commandé (LEFT JOIN + IS NULL)");
-                Console.WriteLine("4. Commandes plus chères que toutes celles du client 1 (ALL)");
-                Console.WriteLine("5. Cuisiniers ayant au moins une commande (EXISTS)");
-                Console.WriteLine("6. Retour");
+                Console.WriteLine("4. Cuisiniers ayant au moins une commande (EXISTS)");
+                Console.WriteLine("5. Retour");
 
                 Console.Write("Votre choix : ");
                 string choix = Console.ReadLine();
@@ -1924,14 +1926,12 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
                         break;
                     case "3":
                         ClientsSansCommandes();
-                        break;
+                        break; 
                     case "4":
-                        CommandesPlusChèresQueClient1();
-                        break;
-                    case "5":
                         CuisiniersAvecCommandes();
                         break;
-                    case "6":
+                    case "5":
+                       
                         return;
                     default:
                         Console.WriteLine("Option invalide.");
@@ -2013,30 +2013,7 @@ WHERE commande.idCuisinier = @idCuisinier AND commande.statut = 'en attente'
             }
         }
 
-        /// <summary>
-        /// affiche les commandes plus chères que toutes celles du client 1
-        /// </summary>
-        static void CommandesPlusChèresQueClient1()
-        {
-            using var connection = new MySqlConnection(connectionString);
-            connection.Open();
-
-            string query = @"
-        SELECT *
-        FROM Commande
-        WHERE prix > ALL (
-            SELECT prix FROM Commande WHERE idClient = 1
-        )";
-
-            using var cmd = new MySqlCommand(query, connection);
-            using var reader = cmd.ExecuteReader();
-
-            Console.WriteLine("\nCommandes plus chères que toutes celles du client 1 :");
-            while (reader.Read())
-            {
-                Console.WriteLine($"Commande #{reader["idCommande"]}, Prix : {reader["prix"]} €");
-            }
-        }
+       
 
         /// <summary>
         /// affiche les cuisiniers ayant au moins une commande
